@@ -103,6 +103,23 @@ export const testUsers: User[] = [
     createdAt: new Date('2024-11-05').toISOString(),
     balance: 0,
   },
+  {
+    id: 'worker-6',
+    email: 'lisa.content@example.com',
+    password: 'test123',
+    fullName: 'Lisa Chang',
+    phone: '+1-555-0106',
+    skills: ['Content Writing', 'SEO', 'Copywriting', 'Marketing'],
+    experience: 'senior',
+    timezone: 'America/Denver',
+    preferredWeeklyPayout: 750,
+    accountStatus: 'active',
+    role: 'worker',
+    knowledgeScore: 87,
+    demoTaskCompleted: true,
+    createdAt: new Date('2024-10-05').toISOString(),
+    balance: 380.00,
+  },
 ];
 
 export const testTasks: Task[] = [
@@ -258,6 +275,15 @@ export const testPayments: Payment[] = [
     createdAt: new Date('2024-11-05').toISOString(),
     completedAt: new Date('2024-11-05').toISOString(),
   },
+  {
+    id: 'payment-9',
+    userId: 'worker-6',
+    amount: 380,
+    type: 'task-payment',
+    status: 'completed',
+    createdAt: new Date('2024-10-15').toISOString(),
+    completedAt: new Date('2024-10-15').toISOString(),
+  },
 ];
 
 export function initializeTestData() {
@@ -282,5 +308,5 @@ export function resetToTestData() {
   localStorage.setItem('cehpoint_payments', JSON.stringify(testPayments));
   sessionStorage.removeItem('cehpoint_current_user');
   console.log('✅ Data reset to test accounts successfully!');
-  alert('Test data loaded! You can now login with:\n\nAdmin:\nadmin@cehpoint.com / admin123\n\nWorkers:\njohn.dev@example.com / test123\nsarah.designer@example.com / test123\nmike.editor@example.com / test123\nemma.data@example.com / test123\nalex.mobile@example.com / test123');
+  alert('Test data loaded! You can now login with:\n\nAdmin:\nadmin@cehpoint.com / admin123\n\nWorkers (all password: test123):\njohn.dev@example.com - Full-stack Developer\nsarah.designer@example.com - UI/UX Designer\nmike.editor@example.com - Video Editor\nemma.data@example.com - Data Analyst\nalex.mobile@example.com - Mobile Developer (pending)\nlisa.content@example.com - Content Writer');
 }

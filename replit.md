@@ -31,7 +31,7 @@ The portal is fully functional with local storage. All core features are working
 **Easiest Way to Get Started:**
 1. Go to the login page (`/login`)
 2. Click the green "Load Test Accounts & Data" button
-3. This will load 5 pre-configured worker accounts + 1 admin with realistic data
+3. This will load 6 pre-configured worker accounts + 1 admin with realistic data
 
 ### Test Accounts Available
 
@@ -72,10 +72,16 @@ The portal is fully functional with local storage. All core features are working
    - Balance: $0.00
    - Status: Pending approval (new worker)
 
+6. **Lisa Chang** - Senior Content Writer
+   - Email: lisa.content@example.com
+   - Skills: Content Writing, SEO, Copywriting, Marketing
+   - Balance: $380.00
+   - Status: Active with completed content projects
+
 ### Test Data Included
 When you load test accounts, you also get:
 - **6 Realistic Tasks**: Available, in-progress, and completed tasks
-- **8 Payment Records**: Task payments and withdrawals
+- **9 Payment Records**: Task payments and withdrawals
 - **Realistic Dates**: All data uses proper timestamps
 - **Varied Statuses**: Different account and task states for thorough testing
 

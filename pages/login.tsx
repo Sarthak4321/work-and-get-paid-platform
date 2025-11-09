@@ -72,81 +72,81 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 flex items-center justify-center py-12 px-4">
       <Head>
         <title>Login - Cehpoint</title>
       </Head>
 
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
+      <div className="max-w-md w-full animate-fade-in">
+        <div className="text-center mb-10">
           <Link href="/">
-            <span className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent cursor-pointer">
+            <span className="text-4xl font-black bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent cursor-pointer hover:scale-110 inline-block transition-transform">
               Cehpoint
             </span>
           </Link>
-          <h1 className="text-3xl font-bold mt-4">Welcome Back</h1>
-          <p className="text-gray-600 mt-2">Login to your account</p>
+          <h1 className="text-4xl font-black mt-6 text-gray-900">Welcome Back</h1>
+          <p className="text-gray-600 mt-3 text-lg">Login to continue your journey</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border p-8">
-          <form onSubmit={handleLogin} className="space-y-4">
+        <div className="glass-card rounded-3xl premium-shadow p-10">
+          <form onSubmit={handleLogin} className="space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+              <div className="bg-red-50 border-2 border-red-200 text-red-700 px-5 py-4 rounded-xl font-medium animate-fade-in">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
+              <label className="block text-sm font-bold mb-3 text-gray-700">Email Address</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                className="w-full px-5 py-4 premium-input rounded-xl text-base font-medium"
                 placeholder="your@email.com"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
+              <label className="block text-sm font-bold mb-3 text-gray-700">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                className="w-full px-5 py-4 premium-input rounded-xl text-base font-medium"
                 placeholder="••••••••"
                 required
               />
             </div>
 
             <Button type="submit" fullWidth>
-              Login
+              Login to Continue
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+          <div className="mt-8 text-center">
+            <p className="text-base text-gray-600">
               Don't have an account?{' '}
-              <Link href="/signup" className="text-indigo-600 font-medium">
-                Sign Up
+              <Link href="/signup" className="text-indigo-600 font-bold hover:text-indigo-700 hover:underline transition-all">
+                Sign Up Free
               </Link>
             </p>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="mt-8 pt-8 border-t-2 border-gray-100">
             <div className="space-y-3">
               <button
                 onClick={createDemoAdmin}
-                className="w-full text-sm text-gray-600 hover:text-gray-800"
+                className="w-full text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
               >
                 Create Demo Admin Account
               </button>
               <button
                 onClick={resetToTestData}
-                className="w-full px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-medium hover:bg-green-100 transition"
+                className="w-full px-5 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white border-none rounded-xl text-sm font-bold hover:shadow-xl hover:scale-105 transition-all duration-300 shadow-lg"
               >
-                Load Test Accounts & Data
+                🚀 Load Test Accounts & Data
               </button>
             </div>
           </div>
