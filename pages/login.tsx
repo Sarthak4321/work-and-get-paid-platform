@@ -19,7 +19,12 @@ export default function Login() {
     const user = users.find(u => u.email === email);
 
     if (!user) {
-      setError('User not found');
+      setError('Invalid email or password');
+      return;
+    }
+
+    if (user.password !== password) {
+      setError('Invalid email or password');
       return;
     }
 
@@ -40,6 +45,7 @@ export default function Login() {
       const adminUser = {
         id: 'admin-1',
         email: 'admin@cehpoint.com',
+        password: 'admin123',
         fullName: 'Admin User',
         phone: '+1234567890',
         skills: [],
@@ -54,9 +60,9 @@ export default function Login() {
         balance: 0,
       };
       storage.setUsers([...users, adminUser]);
-      alert('Demo admin created! Email: admin@cehpoint.com');
+      alert('Demo admin created!\nEmail: admin@cehpoint.com\nPassword: admin123');
     } else {
-      alert('Admin already exists! Email: admin@cehpoint.com');
+      alert('Admin already exists!\nEmail: admin@cehpoint.com\nPassword: admin123');
     }
   };
 
