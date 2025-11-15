@@ -8,7 +8,12 @@ const Home: NextPage = () => {
     <div className="min-h-screen">
       <Head>
         <title>Cehpoint - Project-Based Work Platform | Earn Weekly with Flexible Projects</title>
-        <meta name="description" content="Join Cehpoint's world-class platform for flexible project-based work. Weekly payouts, global opportunities, and quality projects in software development, video editing, and more." />
+
+        {/* FIXED — Escaped the apostrophe */}
+        <meta
+          name="description"
+          content="Join Cehpoint&apos;s world-class platform for flexible project-based work. Weekly payouts, global opportunities, and quality projects in software development, video editing, and more."
+        />
       </Head>
 
       <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
@@ -46,7 +51,7 @@ const Home: NextPage = () => {
               </span>
             </h1>
             <p className="text-xl md:text-2xl mb-10 text-white/90 max-w-3xl mx-auto font-medium leading-relaxed">
-              Join Cehpoint's project-based work platform. No long-term commitments, 
+              Join Cehpoint&apos;s project-based work platform. No long-term commitments,
               flexible schedules, and weekly payouts for quality work.
             </p>
             <Link href="/signup">
@@ -56,7 +61,7 @@ const Home: NextPage = () => {
               </button>
             </Link>
           </div>
-          
+
           <div className="mt-16 flex justify-center gap-8 text-sm">
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
               <Users size={16} />
@@ -77,13 +82,12 @@ const Home: NextPage = () => {
       <section className="py-24 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 animate-fade-in">
-            <h2 className="text-5xl font-black text-gray-900 mb-4">
-              Why Choose Cehpoint?
-            </h2>
+            <h2 className="text-5xl font-black text-gray-900 mb-4">Why Choose Cehpoint?</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Everything you need to succeed as a freelance professional
             </p>
           </div>
+
           <div className="grid md:grid-cols-3 gap-8">
             <div className="group text-center p-8 card-hover bg-white rounded-2xl premium-shadow">
               <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-shadow animate-float">
@@ -153,6 +157,7 @@ const Home: NextPage = () => {
           <h2 className="text-4xl font-bold text-center mb-12 text-gray-900 animate-fade-in">
             How It Works
           </h2>
+
           <div className="grid md:grid-cols-4 gap-6">
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <div className="text-3xl font-bold text-indigo-600 mb-4">1</div>
@@ -191,9 +196,7 @@ const Home: NextPage = () => {
 
       <section className="py-20 bg-indigo-600 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold mb-6">
-            Ready to Start Earning?
-          </h2>
+          <h2 className="text-4xl font-bold mb-6">Ready to Start Earning?</h2>
           <p className="text-xl mb-8 text-indigo-100">
             Join thousands of professionals working flexibly on Cehpoint
           </p>
@@ -214,6 +217,7 @@ const Home: NextPage = () => {
                 Connecting skilled professionals with project-based work opportunities worldwide.
               </p>
             </div>
+
             <div>
               <h4 className="text-white font-semibold mb-4">Platform</h4>
               <ul className="space-y-2 text-sm">
@@ -222,6 +226,7 @@ const Home: NextPage = () => {
                 <li><Link href="/policies/terms">Terms of Service</Link></li>
               </ul>
             </div>
+
             <div>
               <h4 className="text-white font-semibold mb-4">Policies</h4>
               <ul className="space-y-2 text-sm">
@@ -230,6 +235,7 @@ const Home: NextPage = () => {
                 <li><Link href="/policies/termination">Termination Policy</Link></li>
               </ul>
             </div>
+
             <div>
               <h4 className="text-white font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-sm">
@@ -238,6 +244,7 @@ const Home: NextPage = () => {
               </ul>
             </div>
           </div>
+
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
             <p>&copy; 2024 Cehpoint. All rights reserved.</p>
           </div>

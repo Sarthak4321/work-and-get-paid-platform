@@ -27,19 +27,25 @@ export default function Dashboard() {
       router.push('/admin');
       return;
     }
-    
+
     setUser(currentUser);
     loadData(currentUser);
   }, [router]);
 
   const loadData = (currentUser: User) => {
+    const skills = currentUser.skills ?? []; // 🔥 fallback fix
+
     const tasks = storage.getTasks();
+
     setMyTasks(tasks.filter(t => t.assignedTo === currentUser.id));
-    setAvailableTasks(tasks.filter(t => 
-      t.status === 'available' && 
-      t.skills.some(skill => currentUser.skills.includes(skill))
-    ));
-    
+
+    setAvailableTasks(
+      tasks.filter(t =>
+        t.status === "available" &&
+        t.skills.some(skill => skills.includes(skill))
+      )
+    );
+
     const submissions = storage.getDailySubmissions();
     setMySubmissions(
       submissions
@@ -47,6 +53,7 @@ export default function Dashboard() {
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     );
   };
+
 
   if (!user) return null;
 
@@ -79,8 +86,8 @@ export default function Dashboard() {
 
   const handleAcceptTask = (taskId: string) => {
     const tasks = storage.getTasks();
-    const updatedTasks = tasks.map(t => 
-      t.id === taskId 
+    const updatedTasks = tasks.map(t =>
+      t.id === taskId
         ? { ...t, status: 'in-progress' as const, assignedTo: user.id }
         : t
     );
@@ -109,11 +116,10 @@ export default function Dashboard() {
         <div className="flex gap-4 border-b-2 border-gray-200">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-6 py-3 font-bold text-lg transition-all ${
-              activeTab === 'overview'
+            className={`px-6 py-3 font-bold text-lg transition-all ${activeTab === 'overview'
                 ? 'text-indigo-600 border-b-4 border-indigo-600 -mb-0.5'
                 : 'text-gray-600 hover:text-gray-900'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-2">
               <Briefcase size={20} />
@@ -122,11 +128,10 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => setActiveTab('daily-work')}
-            className={`px-6 py-3 font-bold text-lg transition-all ${
-              activeTab === 'daily-work'
+            className={`px-6 py-3 font-bold text-lg transition-all ${activeTab === 'daily-work'
                 ? 'text-indigo-600 border-b-4 border-indigo-600 -mb-0.5'
                 : 'text-gray-600 hover:text-gray-900'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-2">
               <Calendar size={20} />
@@ -163,85 +168,85 @@ export default function Dashboard() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {stats.map((stat, idx) => (
-            <Card key={idx} className="text-center">
-              <div className={`w-12 h-12 ${stat.color} rounded-full flex items-center justify-center mx-auto mb-3`}>
-                <stat.icon size={24} />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-              <p className="text-sm text-gray-600 mt-1">{stat.label}</p>
-            </Card>
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">My Active Tasks</h2>
-            {myTasks.filter(t => t.status === 'in-progress').length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No active tasks</p>
-            ) : (
-              <div className="space-y-3">
-                {myTasks.filter(t => t.status === 'in-progress').map(task => (
-                  <div key={task.id} className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-semibold">{task.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{task.description}</p>
-                    <div className="flex justify-between items-center mt-3">
-                      <span className="text-sm font-medium text-green-600">
-                        ${task.weeklyPayout}
-                      </span>
-                      <Button onClick={() => router.push('/tasks')}>
-                        View Details
-                      </Button>
-                    </div>
+              {stats.map((stat, idx) => (
+                <Card key={idx} className="text-center">
+                  <div className={`w-12 h-12 ${stat.color} rounded-full flex items-center justify-center mx-auto mb-3`}>
+                    <stat.icon size={24} />
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
+                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-sm text-gray-600 mt-1">{stat.label}</p>
+                </Card>
+              ))}
+            </div>
 
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">Available Tasks for You</h2>
-            {availableTasks.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No available tasks</p>
-            ) : (
-              <div className="space-y-3">
-                {availableTasks.slice(0, 3).map(task => (
-                  <div key={task.id} className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-semibold">{task.title}</h3>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {task.skills.map(skill => (
-                        <span key={skill} className="px-2 py-1 bg-indigo-100 text-indigo-600 text-xs rounded">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex justify-between items-center mt-3">
-                      <span className="text-sm font-medium text-green-600">
-                        ${task.weeklyPayout}/week
-                      </span>
-                      <Button 
-                        onClick={() => handleAcceptTask(task.id)}
-                        disabled={!user.demoTaskCompleted}
-                      >
-                        Accept Task
-                      </Button>
-                    </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <h2 className="text-xl font-semibold mb-4">My Active Tasks</h2>
+                {myTasks.filter(t => t.status === 'in-progress').length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No active tasks</p>
+                ) : (
+                  <div className="space-y-3">
+                    {myTasks.filter(t => t.status === 'in-progress').map(task => (
+                      <div key={task.id} className="border border-gray-200 rounded-lg p-4">
+                        <h3 className="font-semibold">{task.title}</h3>
+                        <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                        <div className="flex justify-between items-center mt-3">
+                          <span className="text-sm font-medium text-green-600">
+                            ${task.weeklyPayout}
+                          </span>
+                          <Button onClick={() => router.push('/tasks')}>
+                            View Details
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
+                )}
+              </Card>
+
+              <Card>
+                <h2 className="text-xl font-semibold mb-4">Available Tasks for You</h2>
+                {availableTasks.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No available tasks</p>
+                ) : (
+                  <div className="space-y-3">
+                    {availableTasks.slice(0, 3).map(task => (
+                      <div key={task.id} className="border border-gray-200 rounded-lg p-4">
+                        <h3 className="font-semibold">{task.title}</h3>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {task.skills.map(skill => (
+                            <span key={skill} className="px-2 py-1 bg-indigo-100 text-indigo-600 text-xs rounded">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex justify-between items-center mt-3">
+                          <span className="text-sm font-medium text-green-600">
+                            ${task.weeklyPayout}/week
+                          </span>
+                          <Button
+                            onClick={() => handleAcceptTask(task.id)}
+                            disabled={!user.demoTaskCompleted}
+                          >
+                            Accept Task
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
           </>
         )}
 
         {activeTab === 'daily-work' && (
           <div className="space-y-8">
-            <DailySubmissionForm 
-              userId={user.id} 
+            <DailySubmissionForm
+              userId={user.id}
               onSubmit={() => loadData(user)}
             />
-            
+
             <div>
               <h2 className="text-3xl font-black text-gray-900 mb-6">Submission History</h2>
               <SubmissionHistory submissions={mySubmissions} />

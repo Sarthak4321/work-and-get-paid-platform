@@ -39,13 +39,13 @@ export default function Login() {
       // Store user in local storage (FULL structure for dashboard)
       storage.setCurrentUser({
         id: result.user.uid,
-        email: result.user.email!,
+        email: result.user.email || "",
         fullName: result.user.displayName || "",
         role: "worker",
         accountStatus: "active",
         createdAt: new Date().toISOString(),
 
-        // Prevent dashboard crash
+        // Dashboard fields (FIX FOR ERRORS)
         skills: [],
         experience: "",
         phone: "",
@@ -56,12 +56,11 @@ export default function Login() {
 
       router.push("/dashboard");
 
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setError("Invalid email or password");
     }
   };
-
 
   // ===========================================
   // GOOGLE LOGIN
@@ -79,7 +78,6 @@ export default function Login() {
         return router.push("/dashboard");
       }
 
-      // Create new user if not exists
       const newUser = {
         id: user.uid,
         email: user.email || "",
@@ -89,7 +87,7 @@ export default function Login() {
         accountStatus: "active",
         createdAt: new Date().toISOString(),
 
-        // Dashboard-safe fields
+        // Dashboard fields
         skills: [],
         experience: "",
         phone: "",
@@ -100,6 +98,7 @@ export default function Login() {
 
       storage.setUsers([...users, newUser]);
       storage.setCurrentUser(newUser);
+
       router.push("/dashboard");
 
     } catch (err) {
@@ -107,7 +106,6 @@ export default function Login() {
       alert("Google login failed");
     }
   };
-
 
   // ===========================================
   // GITHUB LOGIN
@@ -144,6 +142,7 @@ export default function Login() {
 
       storage.setUsers([...users, newUser]);
       storage.setCurrentUser(newUser);
+
       router.push("/dashboard");
 
     } catch (err) {
@@ -152,10 +151,8 @@ export default function Login() {
     }
   };
 
-
-
   // ===========================================
-  // DEMO ADMIN (unchanged)
+  // DEMO ADMIN
   // ===========================================
   const createDemoAdmin = () => {
     const users = storage.getUsers();
@@ -179,13 +176,13 @@ export default function Login() {
         createdAt: new Date().toISOString(),
         balance: 0,
       };
+
       storage.setUsers([...users, adminUser]);
-      alert('Demo admin created!\nEmail: admin@cehpoint.com\nPassword: admin123');
+      alert("Demo admin created!\nEmail: admin@cehpoint.com\nPassword: admin123");
     } else {
-      alert('Admin already exists!\nEmail: admin@cehpoint.com\nPassword: admin123');
+      alert("Admin already exists!\nEmail: admin@cehpoint.com\nPassword: admin123");
     }
   };
-
 
 
   return (
@@ -202,6 +199,8 @@ export default function Login() {
             </span>
           </Link>
           <h1 className="text-4xl font-black mt-6 text-gray-900">Welcome Back</h1>
+
+          {/* FIXED apostrophe */}
           <p className="text-gray-600 mt-3 text-lg">Login to continue your journey</p>
         </div>
 
@@ -220,7 +219,7 @@ export default function Login() {
                 onClick={handleGoogleLogin}
                 className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 px-5 py-3 rounded-xl shadow-sm hover:bg-gray-50 transition"
               >
-                <img src="/google.png" className="w-5 h-5" />
+                <img src="/google.png" alt="Google" className="w-5 h-5" />
                 <span className="font-medium">Sign in with Google</span>
               </button>
 
@@ -229,7 +228,7 @@ export default function Login() {
                 onClick={handleGithubLogin}
                 className="w-full flex items-center justify-center gap-2 bg-black text-white px-5 py-3 rounded-xl shadow hover:bg-gray-800 transition"
               >
-                <img src="/github.png" className="w-5 h-5 invert" />
+                <img src="/github.png" alt="GitHub" className="w-5 h-5 invert" />
                 <span className="font-medium">Sign in with GitHub</span>
               </button>
             </div>
@@ -271,7 +270,8 @@ export default function Login() {
 
           <div className="mt-8 text-center">
             <p className="text-base text-gray-600">
-              Don't have an account?{' '}
+              {/* FIXED apostrophe */}
+              Don&apos;t have an account?{' '}
               <Link href="/signup" className="text-indigo-600 font-bold hover:text-indigo-700 hover:underline transition-all">
                 Sign Up Free
               </Link>
@@ -286,14 +286,16 @@ export default function Login() {
               >
                 Create Demo Admin Account
               </button>
+
               <button
                 onClick={resetToTestData}
                 className="w-full px-5 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white border-none rounded-xl text-sm font-bold hover:shadow-xl hover:scale-105 transition-all duration-300 shadow-lg"
               >
-                🚀 Load Test Accounts & Data
+                🚀 Load Test Accounts &amp; Data
               </button>
             </div>
           </div>
+
         </div>
       </div>
     </div>
