@@ -28,6 +28,19 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
+    const users = storage.getUsers();
+    const admin = users.find(
+      u => u.email === email && u.password === password && u.role === "admin"
+    );
+
+    // If admin found → skip Firebase login
+    if (admin) {
+      storage.setCurrentUser(admin);
+      router.push("/admin");
+      return;
+    }
+
+    // Otherwise → Firebase login for normal users
     try {
       const result = await firebaseLogin(email, password);
 
@@ -36,7 +49,7 @@ export default function Login() {
         return;
       }
 
-      // Store user with ALL required fields
+      // Store user...
       const loggedInUser: User = {
         id: result.user.uid,
         email: result.user.email || "",
@@ -47,12 +60,10 @@ export default function Login() {
         experience: "",
         timezone: "",
         preferredWeeklyPayout: 0,
-
         role: "worker",
         accountStatus: "active",
         knowledgeScore: 0,
         demoTaskCompleted: false,
-
         createdAt: new Date().toISOString(),
         balance: 0,
       };
@@ -60,8 +71,7 @@ export default function Login() {
       storage.setCurrentUser(loggedInUser);
       router.push("/dashboard");
 
-    } catch (err: any) {
-      console.error(err);
+    } catch (err) {
       setError("Invalid email or password");
     }
   };
