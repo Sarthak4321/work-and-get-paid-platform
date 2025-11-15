@@ -188,7 +188,7 @@ export default function Login() {
       };
 
       storage.setUsers([...users, adminUser]);
-      alert('Demo admin created!\nEmail: admin@cehpoint.com\nPassword: admin123');
+      alert('Demo admin created!\nEmail: sampadkabiraj13@gmail.com\nPassword: admin123');
     } else {
       alert('Admin already exists!\nEmail: admin@cehpoint.com\nPassword: admin123');
     }
