@@ -446,86 +446,115 @@ export default function Signup() {
   // -----------------------------------------------------
   // GOOGLE SIGNUP
   // -----------------------------------------------------
-  const handleGoogleSignup = async () => {
-    try {
-      const result = await googleAuth();
-      const user = result.user;
+  // =========================
+// GOOGLE SIGNUP
+// =========================
+const handleGoogleSignup = async () => {
+  try {
+    const result = await googleAuth();
+    const user = result.user;
 
-      const newUser: User = {
-        id: `worker-${Date.now()}`,
-        email: user.email || "",
-        password: "",
-        fullName: user.displayName || "",
-        phone: "",
-        skills: [],
-        experience: "",
-        timezone: "",
-        preferredWeeklyPayout: 0,
-        accountStatus: "pending",
-        role: "worker",
-        knowledgeScore: 0,
-        demoTaskCompleted: false,
-        createdAt: new Date().toISOString(),
-        balance: 0,
-      };
+    const users = storage.getUsers();
 
-      const users = storage.getUsers();
-      storage.setUsers([...users, newUser]);
-      storage.setCurrentUser(newUser);
-
-      router.push("/dashboard");
-    } catch (err) {
-      console.error(err);
-      alert("Google signup failed.");
+    // Prevent duplicate accounts
+    const existing = users.find(u => u.email === user.email);
+    if (existing) {
+      storage.setCurrentUser(existing);
+      return router.push("/dashboard");
     }
-  };
 
-  
-  // GITHUB SIGNUP
-  const handleGithubSignup = async () => {
-    try {
-      const result = await githubAuth();
-      const user = result.user;
+    // New worker object
+    const newUser: User = {
+      id: user.uid,
+      email: user.email || "",
+      password: "",
+      fullName: user.displayName || user.email?.split("@")[0] || "New User",
+      phone: "",
+      skills: [],
+      experience: "",
+      timezone: "",
+      preferredWeeklyPayout: 0,
 
-      // FIX: Safe GitHub username extraction
-      const githubRawInfo = (user as any)?.reloadUserInfo;
+      role: "worker",
+      accountStatus: "pending",
+      knowledgeScore: 0,
+      demoTaskCompleted: false,
 
-      const users = storage.getUsers();
-      const githubName =
-        user.displayName ||
-        githubRawInfo?.screenName ||
-        user.email?.split("@")[0] ||
-        "New User";
+      createdAt: new Date().toISOString(),
+      balance: 0,
+    };
 
-      const newUser = {
-        id: user.uid,
-        email: user.email || "",
-        fullName: githubName,
-        password: "",
-        role: "worker" as const,
-        accountStatus: "active" as const,
-        createdAt: new Date().toISOString(),
-        skills: [] as string[],
-        experience: "",
-        phone: "",
-        timezone: "",
-        preferredWeeklyPayout: 0,
-        balance: 0,
-        knowledgeScore: 0,
-        demoTaskCompleted: false,
-      };
+    // Save worker in DB
+    storage.setUsers([...users, newUser]);
+    storage.setCurrentUser(newUser);
 
-      storage.setUsers([...users, newUser]);
-      storage.setCurrentUser(newUser);
-      router.push("/dashboard");
+    router.push("/dashboard");
+
+  } catch (err) {
+    console.error(err);
+    alert("Google signup failed.");
+  }
+};
 
 
-    } catch (err) {
-      console.error(err);
-      alert("GitHub login failed");
+
+// =========================
+// GITHUB SIGNUP
+// =========================
+const handleGithubSignup = async () => {
+  try {
+    const result = await githubAuth();
+    const user = result.user;
+
+    const users = storage.getUsers();
+
+    // Prevent duplicates
+    const existing = users.find(u => u.email === user.email);
+    if (existing) {
+      storage.setCurrentUser(existing);
+      return router.push("/dashboard");
     }
-  };
 
+    // GitHub sometimes stores username here:
+    const githubInfo = (user as any)?.reloadUserInfo;
+
+    const githubName =
+      user.displayName ||
+      githubInfo?.screenName ||
+      user.email?.split("@")[0] ||
+      "GitHub User";
+
+    const newUser: User = {
+      id: user.uid,
+      email: user.email || "",
+      password: "",
+      fullName: githubName,
+      phone: "",
+      skills: [],
+      experience: "",
+      timezone: "",
+      preferredWeeklyPayout: 0,
+
+      role: "worker",
+      accountStatus: "pending",
+      knowledgeScore: 0,
+      demoTaskCompleted: false,
+
+      createdAt: new Date().toISOString(),
+      balance: 0,
+    };
+
+    // Save worker properly
+    storage.setUsers([...users, newUser]);
+    storage.setCurrentUser(newUser);
+
+    router.push("/dashboard");
+
+  } catch (err) {
+    console.error(err);
+    alert("GitHub signup failed.");
+  }
+};
 
   // email
   const handleEmailSignup = async () => {
