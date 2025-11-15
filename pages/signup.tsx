@@ -480,7 +480,7 @@ export default function Signup() {
     }
   };
 
-  // -----------------------------------------------------
+  
   // GITHUB SIGNUP
   const handleGithubSignup = async () => {
     try {
@@ -492,29 +492,19 @@ export default function Signup() {
 
       const githubName =
         user.displayName ||
-        githubRawInfo?.screenName ||   // GitHub username
-        user.email?.split("@")[0] ||   // fallback
+        githubRawInfo?.screenName ||
+        user.email?.split("@")[0] ||
         "New User";
-
-      const users = storage.getUsers();
-      const existing = users.find(u => u.email === user.email);
-
-      if (existing) {
-        storage.setCurrentUser(existing);
-        return router.push("/dashboard");
-      }
 
       const newUser = {
         id: user.uid,
         email: user.email || "",
         fullName: githubName,
         password: "",
-        role: "worker",
-        accountStatus: "active",
+        role: "worker" as const,
+        accountStatus: "active" as const,
         createdAt: new Date().toISOString(),
-
-        // dashboard-safe fields
-        skills: [],
+        skills: [] as string[],
         experience: "",
         phone: "",
         timezone: "",
@@ -524,9 +514,10 @@ export default function Signup() {
         demoTaskCompleted: false,
       };
 
-      storage.setUsers([...users, newUser]);
+      storage.setUsers([...user, newUser]);
       storage.setCurrentUser(newUser);
       router.push("/dashboard");
+
 
     } catch (err) {
       console.error(err);
