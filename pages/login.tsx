@@ -166,7 +166,7 @@ export default function Login() {
   // =============================================================
   const createDemoAdmin = () => {
     const users = storage.getUsers();
-    const existingAdmin = users.find(u => u.email === 'admin@cehpoint.com');
+    const existingAdmin = users.find(u => u.email === 'jitbanerjeesujan@gmail.com');
 
     if (!existingAdmin) {
       const adminUser: User = {
