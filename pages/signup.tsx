@@ -514,7 +514,7 @@ export default function Signup() {
         demoTaskCompleted: false,
       };
 
-      storage.setUsers([...user, newUser]);
+      storage.setUsers([...users, newUser]);
       storage.setCurrentUser(newUser);
       router.push("/dashboard");
 
