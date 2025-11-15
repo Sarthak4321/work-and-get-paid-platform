@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { storage } from '../utils/storage';
+import { storage, User } from '../utils/storage';
 import { initializeTestData, resetToTestData } from '../utils/testData';
 import Button from '../components/Button';
 
@@ -21,9 +21,9 @@ export default function Login() {
     initializeTestData();
   }, []);
 
-  // ===========================================
+  // =============================================================
   // EMAIL + PASSWORD LOGIN
-  // ===========================================
+  // =============================================================
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -36,35 +36,40 @@ export default function Login() {
         return;
       }
 
-      // Store user in local storage (FULL structure for dashboard)
-      storage.setCurrentUser({
+      // Store user with ALL required fields
+      const loggedInUser: User = {
         id: result.user.uid,
         email: result.user.email || "",
+        password: password,
         fullName: result.user.displayName || "",
-        role: "worker",
-        accountStatus: "active",
-        createdAt: new Date().toISOString(),
-
-        // Dashboard fields (FIX FOR ERRORS)
+        phone: "",
         skills: [],
         experience: "",
-        phone: "",
         timezone: "",
         preferredWeeklyPayout: 0,
-        balance: 0,
-      });
 
+        role: "worker",
+        accountStatus: "active",
+        knowledgeScore: 0,
+        demoTaskCompleted: false,
+
+        createdAt: new Date().toISOString(),
+        balance: 0,
+      };
+
+      storage.setCurrentUser(loggedInUser);
       router.push("/dashboard");
 
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setError("Invalid email or password");
     }
   };
 
-  // ===========================================
+
+  // =============================================================
   // GOOGLE LOGIN
-  // ===========================================
+  // =============================================================
   const handleGoogleLogin = async () => {
     try {
       const result = await googleAuth();
@@ -78,27 +83,28 @@ export default function Login() {
         return router.push("/dashboard");
       }
 
-      const newUser = {
+      const newUser: User = {
         id: user.uid,
         email: user.email || "",
-        fullName: user.displayName || "",
         password: "",
-        role: "worker",
-        accountStatus: "active",
-        createdAt: new Date().toISOString(),
-
-        // Dashboard fields
+        fullName: user.displayName || "",
+        phone: "",
         skills: [],
         experience: "",
-        phone: "",
         timezone: "",
         preferredWeeklyPayout: 0,
+
+        role: "worker",
+        accountStatus: "active",
+        knowledgeScore: 0,
+        demoTaskCompleted: false,
+
+        createdAt: new Date().toISOString(),
         balance: 0,
       };
 
       storage.setUsers([...users, newUser]);
       storage.setCurrentUser(newUser);
-
       router.push("/dashboard");
 
     } catch (err) {
@@ -107,9 +113,10 @@ export default function Login() {
     }
   };
 
-  // ===========================================
+
+  // =============================================================
   // GITHUB LOGIN
-  // ===========================================
+  // =============================================================
   const handleGithubLogin = async () => {
     try {
       const result = await githubAuth();
@@ -123,26 +130,28 @@ export default function Login() {
         return router.push("/dashboard");
       }
 
-      const newUser = {
+      const newUser: User = {
         id: user.uid,
         email: user.email || "",
-        fullName: user.displayName || "",
         password: "",
-        role: "worker",
-        accountStatus: "active",
-        createdAt: new Date().toISOString(),
-
+        fullName: user.displayName || "",
+        phone: "",
         skills: [],
         experience: "",
-        phone: "",
         timezone: "",
         preferredWeeklyPayout: 0,
+
+        role: "worker",
+        accountStatus: "active",
+        knowledgeScore: 0,
+        demoTaskCompleted: false,
+
+        createdAt: new Date().toISOString(),
         balance: 0,
       };
 
       storage.setUsers([...users, newUser]);
       storage.setCurrentUser(newUser);
-
       router.push("/dashboard");
 
     } catch (err) {
@@ -151,15 +160,16 @@ export default function Login() {
     }
   };
 
-  // ===========================================
-  // DEMO ADMIN
-  // ===========================================
+
+  // =============================================================
+  // DEMO ADMIN (unchanged)
+  // =============================================================
   const createDemoAdmin = () => {
     const users = storage.getUsers();
     const existingAdmin = users.find(u => u.email === 'admin@cehpoint.com');
 
     if (!existingAdmin) {
-      const adminUser = {
+      const adminUser: User = {
         id: 'admin-1',
         email: 'admin@cehpoint.com',
         password: 'admin123',
@@ -178,9 +188,9 @@ export default function Login() {
       };
 
       storage.setUsers([...users, adminUser]);
-      alert("Demo admin created!\nEmail: admin@cehpoint.com\nPassword: admin123");
+      alert('Demo admin created!\nEmail: admin@cehpoint.com\nPassword: admin123');
     } else {
-      alert("Admin already exists!\nEmail: admin@cehpoint.com\nPassword: admin123");
+      alert('Admin already exists!\nEmail: admin@cehpoint.com\nPassword: admin123');
     }
   };
 
@@ -199,11 +209,8 @@ export default function Login() {
             </span>
           </Link>
           <h1 className="text-4xl font-black mt-6 text-gray-900">Welcome Back</h1>
-
-          {/* FIXED apostrophe */}
           <p className="text-gray-600 mt-3 text-lg">Login to continue your journey</p>
         </div>
-
 
         <div className="glass-card rounded-3xl premium-shadow p-10">
           <form onSubmit={handleLogin} className="space-y-6">
@@ -219,7 +226,7 @@ export default function Login() {
                 onClick={handleGoogleLogin}
                 className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 px-5 py-3 rounded-xl shadow-sm hover:bg-gray-50 transition"
               >
-                <img src="/google.png" alt="Google" className="w-5 h-5" />
+                <img src="/google.png" alt="google" className="w-5 h-5" />
                 <span className="font-medium">Sign in with Google</span>
               </button>
 
@@ -228,7 +235,7 @@ export default function Login() {
                 onClick={handleGithubLogin}
                 className="w-full flex items-center justify-center gap-2 bg-black text-white px-5 py-3 rounded-xl shadow hover:bg-gray-800 transition"
               >
-                <img src="/github.png" alt="GitHub" className="w-5 h-5 invert" />
+                <img src="/github.png" alt="github" className="w-5 h-5 invert" />
                 <span className="font-medium">Sign in with GitHub</span>
               </button>
             </div>
@@ -270,8 +277,7 @@ export default function Login() {
 
           <div className="mt-8 text-center">
             <p className="text-base text-gray-600">
-              {/* FIXED apostrophe */}
-              Don&apos;t have an account?{' '}
+              Don't have an account?{' '}
               <Link href="/signup" className="text-indigo-600 font-bold hover:text-indigo-700 hover:underline transition-all">
                 Sign Up Free
               </Link>
@@ -286,12 +292,11 @@ export default function Login() {
               >
                 Create Demo Admin Account
               </button>
-
               <button
                 onClick={resetToTestData}
                 className="w-full px-5 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white border-none rounded-xl text-sm font-bold hover:shadow-xl hover:scale-105 transition-all duration-300 shadow-lg"
               >
-                🚀 Load Test Accounts &amp; Data
+                🚀 Load Test Accounts & Data
               </button>
             </div>
           </div>
