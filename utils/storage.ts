@@ -140,7 +140,7 @@
 // utils/storage.ts
 
 import {
-  createUser,
+  createUser as fsCreateUser,
   getUserByEmail as fsGetUserByEmail,
   getUserById as fsGetUserById,
   listUsers as fsListUsers,
@@ -153,13 +153,14 @@ import {
   createSubmission as fsCreateSubmission,
   listSubmissionsByUser as fsListSubmissionsByUser,
   listSubmissions as fsListSubmissions,
+  updateSubmission as fsUpdateSubmission,
 } from "./firestore";
 
-import type { User, Task, export DailySubmission } from "./types";
+import type { User, Task, DailySubmission } from "./types";
 
 /**
  * Firestore-backed storage module
- * Mirrors your old localStorage API but works async with Firestore.
+ * Replaces old localStorage implementation. All Firestore operations are async.
  */
 export const storage = {
   /* ---------------------------------------------------
@@ -179,7 +180,7 @@ export const storage = {
   },
 
   async createUser(user: Omit<User, "id">): Promise<User> {
-    return await createUser(user);
+    return await fsCreateUser(user);
   },
 
   async updateUser(id: string, payload: Partial<User>) {
@@ -187,12 +188,16 @@ export const storage = {
   },
 
   /* ---------------------------------------------------
-   * CURRENT USER (local browser session only)
+   * CURRENT USER (browser session only)
    * --------------------------------------------------- */
 
-  setCurrentUser(user: User) {
+  setCurrentUser(user: User | null) {
     if (typeof window !== "undefined") {
-      localStorage.setItem("ceh_current_user", JSON.stringify(user));
+      if (user) {
+        localStorage.setItem("ceh_current_user", JSON.stringify(user));
+      } else {
+        localStorage.removeItem("ceh_current_user");
+      }
     }
   },
 
@@ -233,7 +238,9 @@ export const storage = {
    * DAILY SUBMISSIONS
    * --------------------------------------------------- */
 
-  async createSubmission(sub: Omit<DailySubmission, "id">): Promise<DailySubmission> {
+  async createSubmission(
+    sub: Omit<DailySubmission, "id">
+  ): Promise<DailySubmission> {
     return await fsCreateSubmission(sub);
   },
 
@@ -243,5 +250,9 @@ export const storage = {
 
   async getAllSubmissions(): Promise<DailySubmission[]> {
     return await fsListSubmissions();
+  },
+
+  async updateSubmission(id: string, payload: Partial<DailySubmission>) {
+    return await fsUpdateSubmission(id, payload);
   },
 };

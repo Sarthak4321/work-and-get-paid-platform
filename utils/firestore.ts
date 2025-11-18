@@ -91,6 +91,15 @@ export async function createSubmission(data: Omit<DailySubmission, "id">) {
   return { id: ref.id, ...data };
 }
 
+// UPDATE a submission
+export async function updateSubmission(
+  id: string,
+  payload: Partial<DailySubmission>
+): Promise<void> {
+  await updateDoc(doc(db, "submissions", id), payload);
+}
+
+
 export async function listSubmissions() {
   const snap = await getDocs(submissionsCol);
   return snap.docs.map(d => ({ id: d.id, ...(d.data() as DailySubmission) })) as DailySubmission[];

@@ -1,92 +1,130 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import Head from 'next/head';
-import Layout from '../../components/Layout';
-import { storage, DailySubmission, User } from '../../utils/storage';
-import { Github, Video, Calendar, Clock, Users, Filter, MessageSquare, Send } from 'lucide-react';
-import { format } from 'date-fns';
-import Button from '../../components/Button';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import Head from "next/head";
+import Layout from "../../components/Layout";
+
+import { storage } from "../../utils/storage";
+import type { DailySubmission, User } from "../../utils/types";
+
+import {
+  Github,
+  Video,
+  Calendar,
+  Clock,
+  Users,
+  Filter,
+  MessageSquare,
+  Send,
+} from "lucide-react";
+
+import { format } from "date-fns";
+import Button from "../../components/Button";
 
 export default function AdminDailyWork() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+
   const [submissions, setSubmissions] = useState<DailySubmission[]>([]);
   const [workers, setWorkers] = useState<User[]>([]);
-  const [selectedWorker, setSelectedWorker] = useState<string>('all');
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [selectedWorkType, setSelectedWorkType] = useState<string>('all');
-  const [feedbackModal, setFeedbackModal] = useState<{ submissionId: string; feedback: string } | null>(null);
 
+  const [selectedWorker, setSelectedWorker] = useState<string>("all");
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedWorkType, setSelectedWorkType] = useState<string>("all");
+
+  const [feedbackModal, setFeedbackModal] = useState<{
+    submissionId: string;
+    feedback: string;
+  } | null>(null);
+
+  // -------------------------------------------------
+  // LOAD ADMIN + FIRESTORE DATA
+  // -------------------------------------------------
   useEffect(() => {
     const currentUser = storage.getCurrentUser();
-    if (!currentUser || currentUser.role !== 'admin') {
-      router.push('/login');
+    if (!currentUser || currentUser.role !== "admin") {
+      router.push("/login");
       return;
     }
+
     setUser(currentUser);
     loadData();
-  }, [router]);
+  }, []);
 
-  const loadData = () => {
-    const allSubmissions = storage.getDailySubmissions();
-    setSubmissions(allSubmissions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-    
-    const allWorkers = storage.getUsers().filter(u => u.role === 'worker');
-    setWorkers(allWorkers);
+  const loadData = async () => {
+    const subs = await storage.getAllSubmissions();
+    const workersList = await storage.getUsers();
+
+    setSubmissions(
+      subs.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+    );
+    setWorkers(workersList.filter((u) => u.role === "worker"));
   };
 
-  const getWorkerName = (userId: string) => {
-    const worker = workers.find(w => w.id === userId);
-    return worker?.fullName || 'Unknown Worker';
-  };
-
-  const filteredSubmissions = submissions.filter(s => {
-    if (selectedWorker !== 'all' && s.userId !== selectedWorker) return false;
+  // -------------------------------------------------
+  // FILTERS
+  // -------------------------------------------------
+  const filteredSubmissions = submissions.filter((s) => {
+    if (selectedWorker !== "all" && s.userId !== selectedWorker) return false;
     if (selectedDate && s.date !== selectedDate) return false;
-    if (selectedWorkType !== 'all' && s.workType !== selectedWorkType) return false;
+    if (selectedWorkType !== "all" && s.workType !== selectedWorkType)
+      return false;
     return true;
   });
 
-  const handleSubmitFeedback = (submissionId: string) => {
+  const getWorkerName = (userId: string) => {
+    const worker = workers.find((w) => w.id === userId);
+    return worker?.fullName || "Unknown Worker";
+  };
+
+  // -------------------------------------------------
+  // ADMIN FEEDBACK
+  // -------------------------------------------------
+  const handleSubmitFeedback = async (submissionId: string) => {
     if (!feedbackModal?.feedback) return;
-    
-    const allSubmissions = storage.getDailySubmissions();
-    const updated = allSubmissions.map(s => 
-      s.id === submissionId 
-        ? { ...s, adminReviewed: true, adminFeedback: feedbackModal.feedback }
-        : s
-    );
-    storage.setDailySubmissions(updated);
-    loadData();
+
+    await storage.updateSubmission(submissionId, {
+      adminReviewed: true,
+      adminFeedback: feedbackModal.feedback,
+    });
+
     setFeedbackModal(null);
+    await loadData();
   };
 
   if (!user) return null;
 
+  // -------------------------------------------------
+  // DASHBOARD STATS
+  // -------------------------------------------------
   const stats = [
     {
-      label: 'Total Submissions',
+      label: "Total Submissions",
       value: submissions.length,
       icon: Calendar,
-      color: 'from-blue-500 to-cyan-600',
+      color: "from-blue-500 to-cyan-600",
     },
     {
-      label: 'Today',
-      value: submissions.filter(s => s.date === new Date().toISOString().split('T')[0]).length,
+      label: "Today",
+      value: submissions.filter(
+        (s) => s.date === new Date().toISOString().split("T")[0]
+      ).length,
       icon: Clock,
-      color: 'from-green-500 to-emerald-600',
+      color: "from-green-500 to-emerald-600",
     },
     {
-      label: 'Active Workers',
-      value: new Set(submissions.map(s => s.userId)).size,
+      label: "Active Workers",
+      value: new Set(submissions.map((s) => s.userId)).size,
       icon: Users,
-      color: 'from-purple-500 to-pink-600',
+      color: "from-purple-500 to-pink-600",
     },
     {
-      label: 'Needs Review',
-      value: submissions.filter(s => !s.adminReviewed).length,
+      label: "Needs Review",
+      value: submissions.filter((s) => !s.adminReviewed).length,
       icon: MessageSquare,
-      color: 'from-orange-500 to-red-600',
+      color: "from-orange-500 to-red-600",
     },
   ];
 
