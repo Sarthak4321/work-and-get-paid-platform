@@ -1,48 +1,66 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import Head from 'next/head';
-import Layout from '../components/Layout';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import { storage, User } from '../utils/storage';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import Head from "next/head";
+
+import Layout from "../components/Layout";
+import Card from "../components/Card";
+import Button from "../components/Button";
+
+import { storage } from "../utils/storage";
+import type { User } from "../utils/types";
 
 export default function DemoTask() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [submission, setSubmission] = useState('');
 
+  const [user, setUser] = useState<User | null>(null);
+  const [submission, setSubmission] = useState("");
+
+  /* ---------------------------------------------------------
+   * AUTH CHECK
+   * ------------------------------------------------------- */
   useEffect(() => {
     const currentUser = storage.getCurrentUser();
-    if (!currentUser || currentUser.role !== 'worker') {
-      router.push('/login');
+
+    if (!currentUser || currentUser.role !== "worker") {
+      router.push("/login");
       return;
     }
+
     if (currentUser.demoTaskCompleted) {
-      router.push('/dashboard');
+      router.push("/dashboard");
       return;
     }
+
     setUser(currentUser);
-  }, [router]);
+  }, []);
 
-  const handleSubmit = () => {
+  /* ---------------------------------------------------------
+   * SUBMIT DEMO TASK
+   * ------------------------------------------------------- */
+  const handleSubmit = async () => {
     if (!submission.trim()) {
-      alert('Please enter your submission');
+      alert("Please enter your submission");
       return;
     }
 
+    // random score between 70-100
     const score = Math.floor(Math.random() * 30) + 70;
-    
-    const allUsers = storage.getUsers();
-    const updatedUsers = allUsers.map(u =>
-      u.id === user!.id
-        ? { ...u, demoTaskCompleted: true, demoTaskScore: score }
-        : u
-    );
-    storage.setUsers(updatedUsers);
-    storage.setCurrentUser({ ...user!, demoTaskCompleted: true, demoTaskScore: score });
+
+    // Update Firestore user
+    await storage.updateUser(user!.id, {
+      demoTaskCompleted: true,
+      demoTaskScore: score,
+    });
+
+    // Update local current user
+    storage.setCurrentUser({
+      ...user!,
+      demoTaskCompleted: true,
+      demoTaskScore: score,
+    });
 
     alert(`Demo task submitted! Score: ${score}/100. You can now accept regular tasks.`);
-    router.push('/dashboard');
+    router.push("/dashboard");
   };
 
   if (!user) return null;
