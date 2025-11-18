@@ -1,5 +1,5 @@
 import { Github, Video, Calendar, Clock, MessageSquare } from 'lucide-react';
-import { DailySubmission } from '../utils/storage';
+import type { DailySubmission } from '../utils/types';
 import { format } from 'date-fns';
 
 interface SubmissionHistoryProps {
@@ -36,6 +36,7 @@ export default function SubmissionHistory({ submissions }: SubmissionHistoryProp
                 {submission.workType.replace('-', ' ').toUpperCase()}
               </span>
             </div>
+
             <div className="text-right">
               <div className="flex items-center gap-2 text-gray-600">
                 <Clock size={16} />
@@ -63,6 +64,7 @@ export default function SubmissionHistory({ submissions }: SubmissionHistoryProp
                 View GitHub
               </a>
             )}
+
             {submission.videoUrl && (
               <a
                 href={submission.videoUrl}

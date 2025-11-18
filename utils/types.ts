@@ -35,6 +35,7 @@ export interface Task {
 }
 
 export interface DailySubmission {
+  [x: string]: any;
   id: string;
   userId: string;
   date: string;
