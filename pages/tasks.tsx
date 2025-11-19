@@ -3,12 +3,12 @@ import React, { useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 
-import Layout from "../../components/Layout";
-import Card from "../../components/Card";
-import Button from "../../components/Button";
+import Layout from "../components/Layout";
+import Card from "../components/Card";
+import Button from "../components/Button";
 
-import { storage } from "../../utils/storage";
-import type { User, Task, Payment } from "../../utils/types";
+import { storage } from "../utils/storage";
+import type { User, Task, Payment } from "../utils/storage";
 
 import { Plus, Check, X } from "lucide-react";
 
