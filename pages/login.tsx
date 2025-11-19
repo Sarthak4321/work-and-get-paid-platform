@@ -266,7 +266,7 @@ export default function Login() {
       }
 
       // Save minimal session
-      localStorage.setItem("currentUser", JSON.stringify(user));
+      localStorage.setItem("ceh_current_user", JSON.stringify(user));
 
       // Redirect based on role
       router.push(user.role === "admin" ? "/admin" : "/dashboard");
