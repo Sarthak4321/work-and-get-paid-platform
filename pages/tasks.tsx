@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+
 import Layout from '../components/Layout';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { storage, User, Task } from '../utils/storage';
+
+import { storage } from '../utils/storage';
+import type { User, Task } from '../utils/types';
+
 import { format } from 'date-fns';
 
 export default function Tasks() {
@@ -19,36 +23,32 @@ export default function Tasks() {
       router.push('/login');
       return;
     }
+
     setUser(currentUser);
     loadTasks(currentUser.id);
-  }, [router]);
+  }, []);
 
-  const loadTasks = (userId: string) => {
-    const allTasks = storage.getTasks();
-    setTasks(allTasks.filter(t => t.assignedTo === userId));
+  const loadTasks = async (userId: string) => {
+    const allTasks = await storage.getTasks();
+    setTasks(allTasks.filter((t) => t.assignedTo === userId));
   };
 
-  const handleSubmitTask = (taskId: string) => {
-    const submission = prompt('Enter your submission URL or description:');
+  const handleSubmitTask = async (taskId: string) => {
+    const submission = prompt("Enter your submission URL or description:");
     if (!submission) return;
 
-    const allTasks = storage.getTasks();
-    const updatedTasks = allTasks.map(t =>
-      t.id === taskId
-        ? {
-            ...t,
-            status: 'submitted' as const,
-            submittedAt: new Date().toISOString(),
-            submissionUrl: submission,
-          }
-        : t
-    );
-    storage.setTasks(updatedTasks);
-    loadTasks(user!.id);
-    alert('Task submitted successfully! Awaiting review.');
+    await storage.updateTask(taskId, {
+      status: "submitted",
+      submittedAt: new Date().toISOString(),
+      submissionUrl: submission,
+    });
+
+    await loadTasks(user!.id);
+    alert("Task submitted successfully! Awaiting review.");
   };
 
-  const filteredTasks = filter === 'all' ? tasks : tasks.filter(t => t.status === filter);
+  const filteredTasks =
+    filter === "all" ? tasks : tasks.filter((t) => t.status === filter);
 
   if (!user) return null;
 

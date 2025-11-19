@@ -162,7 +162,7 @@ import {
   
 } from "./firestore";
 
-import type { User, Task, DailySubmission, Payment } from "./types";
+import type { export export User, export export Task, DailySubmission, Payment } from "./types";
 
 /**
  * Firestore-backed storage module
