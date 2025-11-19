@@ -228,7 +228,7 @@ import { firebaseLogin } from "../utils/authEmailPassword";
 import { googleAuth, githubAuth } from "../utils/authProviders";
 
 import { db } from "../utils/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, DocumentData, DocumentReference, getDoc } from "firebase/firestore";
 
 export default function Login() {
   const router = useRouter();
@@ -248,7 +248,11 @@ export default function Login() {
       const result = await firebaseLogin(email, password);
       const uid = result.user.uid;
 
-      // -------- 🔥 FIRESTORE BASED VERIFICATION --------
+      if (!result.user.emailVerified) {
+        setError("Please verify your email first.");
+        return;
+      }
+
       const userRef = doc(db, "users", uid);
       const snap = await getDoc(userRef);
 
@@ -259,22 +263,21 @@ export default function Login() {
 
       const user = snap.data();
 
-      // 🔥 Authentication is trusted from Firestore, NOT Firebase Auth
-      if (user.emailVerified === false) {
-        setError("Please verify your email first.");
-        return;
+      // 🔥 Auto-update Firestore emailVerified if needed
+      if (result.user.emailVerified && user.emailVerified === false) {
+        await updateDoc(userRef, { emailVerified: true });
+        user.emailVerified = true;
       }
 
-      // Save minimal session
-      localStorage.setItem("ceh_current_user", JSON.stringify(user));
+      localStorage.setItem("currentUser", JSON.stringify(user));
 
-      // Redirect based on role
       router.push(user.role === "admin" ? "/admin" : "/dashboard");
     } catch (err) {
       console.error(err);
       setError("Invalid email or password.");
     }
   };
+
 
   // ##############################################################
   // 🔥 GOOGLE LOGIN HANDLER
@@ -421,4 +424,8 @@ export default function Login() {
       </div>
     </div>
   );
+}
+
+function updateDoc(userRef: DocumentReference<DocumentData, DocumentData>, arg1: { emailVerified: boolean; }) {
+  throw new Error("Function not implemented.");
 }
