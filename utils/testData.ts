@@ -1,4 +1,4 @@
-import { User, Task, Payment } from './storage';
+import type { User, Task, Payment } from './types';
 
 export const testUsers: User[] = [
   {
@@ -134,6 +134,7 @@ export const testTasks: Task[] = [
     status: 'available',
     createdAt: new Date('2024-11-01').toISOString(),
     createdBy: 'admin-1',
+    assignedTo: ''
   },
   {
     id: 'task-2',
@@ -172,6 +173,7 @@ export const testTasks: Task[] = [
     status: 'available',
     createdAt: new Date('2024-11-03').toISOString(),
     createdBy: 'admin-1',
+    assignedTo: ''
   },
   {
     id: 'task-5',
@@ -184,6 +186,7 @@ export const testTasks: Task[] = [
     status: 'available',
     createdAt: new Date('2024-11-04').toISOString(),
     createdBy: 'admin-1',
+    assignedTo: ''
   },
   {
     id: 'task-6',
