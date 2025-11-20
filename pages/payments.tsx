@@ -305,21 +305,18 @@ export default function Payments() {
   }, [router]);
 
   const loadPayments = async (userId: string) => {
-    try {
-      const list = await storage.getPaymentsByUser(userId);
-      setPayments(
-        list.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
-      );
-    } catch (err) {
-      console.error('Failed to load payments:', err);
-      alert('Failed to load payments.');
-    } finally {
-      setLoading(false);
+    // Load payment history
+    const list = await storage.getPaymentsByUser(userId);
+    setPayments(list);
+
+    // Load updated user balance from Firestore
+    const updatedUser = await storage.getUserById(userId);
+    if (updatedUser) {
+      setUser(updatedUser);
+      storage.setCurrentUser(updatedUser); // sync session
     }
   };
+
 
   /* ----------------------------------------
    * HANDLE WITHDRAWAL
@@ -415,148 +412,148 @@ export default function Payments() {
         </div>
 
         {/* SUMMARY CARDS */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="text-center">
-            <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
-              <DollarSign size={24} />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">
-              ${user.balance.toFixed(2)}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">Available Balance</p>
-          </Card>
-
-          <Card className="text-center">
-            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-              <TrendingUp size={24} />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">
-              ${totalEarnings.toFixed(2)}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">Total Earned</p>
-          </Card>
-
-          <Card className="text-center">
-            <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Download size={24} />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">
-              ${totalWithdrawn.toFixed(2)}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">Total Withdrawn</p>
-          </Card>
-        </div>
-
-        {/* WITHDRAW SECTION */}
-        {showWithdraw && (
-          <Card className="bg-indigo-50">
-            <h3 className="text-lg font-semibold mb-4">Withdraw Funds</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Amount ($)
-                </label>
-                <input
-                  type="number"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600"
-                  placeholder="Enter amount"
-                  max={user.balance}
-                />
-                <p className="text-sm text-gray-600 mt-1">
-                  Available: ${user.balance.toFixed(2)}
-                </p>
-              </div>
-
-              {!user.payoutAccount?.verified && (
-                <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    Your payout account is not verified. Withdrawal requests
-                    will be sent to the admin for approval.
-                  </p>
-                </div>
-              )}
-
-              <div className="flex space-x-3">
-                <Button onClick={handleWithdraw} disabled={submitting}>
-                  {submitting ? 'Processing…' : 'Confirm Withdrawal'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowWithdraw(false)}
-                  disabled={submitting}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* TRANSACTION HISTORY */}
-        <Card>
-          <h2 className="text-xl font-semibold mb-4">Transaction History</h2>
-          {payments.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">
-              No transactions yet
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {payments.map((payment) => {
-                const isWithdrawal = payment.type === 'withdrawal';
-                const isTaskPayment = payment.type === 'task-payment';
-
-                const statusLabel =
-                  isWithdrawal && payment.status === 'pending'
-                    ? 'Pending admin/processing'
-                    : payment.status;
+        <Card className="text-center">
+          <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+            <DollarSign size={24} />
+          </div>
+          <p className="text-3xl font-bold text-gray-900">
+            ${user?.balance?.toFixed(2) ?? "0.00"}
+          </p>
+          <p className="text-sm text-gray-600 mt-1">Available Balance</p>
+        </Card>
 
 
-                return (
-                  <div
-                    key={payment.id}
-                    className="flex justify-between items-center p-4 border border-gray-200 rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium">
-                        {isTaskPayment ? 'Task Payment' : 'Withdrawal'}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {format(
-                          new Date(payment.createdAt),
-                          'MMM dd, yyyy HH:mm'
-                        )}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p
-                        className={`font-semibold ${isTaskPayment
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                          }`}
-                      >
-                        {isTaskPayment ? '+' : '-'}$
-                        {payment.amount.toFixed(2)}
-                      </p>
-                      <span
-                        className={`text-xs px-2 py-1 rounded ${payment.status === 'completed'
-                            ? 'bg-green-100 text-green-700'
-                            : payment.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}
-                      >
-                        {statusLabel}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+        <Card className="text-center">
+          <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+            <TrendingUp size={24} />
+          </div>
+          <p className="text-3xl font-bold text-gray-900">
+            ${totalEarnings.toFixed(2)}
+          </p>
+          <p className="text-sm text-gray-600 mt-1">Total Earned</p>
+        </Card>
+
+        <Card className="text-center">
+          <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Download size={24} />
+          </div>
+          <p className="text-3xl font-bold text-gray-900">
+            ${totalWithdrawn.toFixed(2)}
+          </p>
+          <p className="text-sm text-gray-600 mt-1">Total Withdrawn</p>
         </Card>
       </div>
-    </Layout>
+
+      {/* WITHDRAW SECTION */}
+      {showWithdraw && (
+        <Card className="bg-indigo-50">
+          <h3 className="text-lg font-semibold mb-4">Withdraw Funds</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Amount ($)
+              </label>
+              <input
+                type="number"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600"
+                placeholder="Enter amount"
+                max={user.balance}
+              />
+              <p className="text-sm text-gray-600 mt-1">
+                Available: ${user.balance.toFixed(2)}
+              </p>
+            </div>
+
+            {!user.payoutAccount?.verified && (
+              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  Your payout account is not verified. Withdrawal requests
+                  will be sent to the admin for approval.
+                </p>
+              </div>
+            )}
+
+            <div className="flex space-x-3">
+              <Button onClick={handleWithdraw} disabled={submitting}>
+                {submitting ? 'Processing…' : 'Confirm Withdrawal'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowWithdraw(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* TRANSACTION HISTORY */}
+      <Card>
+        <h2 className="text-xl font-semibold mb-4">Transaction History</h2>
+        {payments.length === 0 ? (
+          <p className="text-center text-gray-500 py-8">
+            No transactions yet
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {payments.map((payment) => {
+              const isWithdrawal = payment.type === 'withdrawal';
+              const isTaskPayment = payment.type === 'task-payment';
+
+              const statusLabel =
+                isWithdrawal && payment.status === 'pending'
+                  ? 'Pending admin/processing'
+                  : payment.status;
+
+
+              return (
+                <div
+                  key={payment.id}
+                  className="flex justify-between items-center p-4 border border-gray-200 rounded-lg"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {isTaskPayment ? 'Task Payment' : 'Withdrawal'}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {format(
+                        new Date(payment.createdAt),
+                        'MMM dd, yyyy HH:mm'
+                      )}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p
+                      className={`font-semibold ${isTaskPayment
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                        }`}
+                    >
+                      {isTaskPayment ? '+' : '-'}$
+                      {payment.amount.toFixed(2)}
+                    </p>
+                    <span
+                      className={`text-xs px-2 py-1 rounded ${payment.status === 'completed'
+                        ? 'bg-green-100 text-green-700'
+                        : payment.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-red-100 text-red-700'
+                        }`}
+                    >
+                      {statusLabel}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+    </div>
+    </Layout >
   );
 }
