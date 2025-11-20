@@ -7,7 +7,7 @@ import Layout from "../components/Layout";
 import Card from "../components/Card";
 import Button from "../components/Button";
 
-import { storage } from "../utils/storage";
+import { storage } from "../utils/storage"; 
 import type { User, Task, Payment } from "../utils/types";
 
 import { Plus, Check, X } from "lucide-react";
