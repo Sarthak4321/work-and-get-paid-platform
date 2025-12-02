@@ -180,7 +180,7 @@ export default function Dashboard() {
                       You need to complete a demo task before accepting regular projects
                     </p>
                   </div>
-                  <Button variant="secondary" onClick={() => router.push('/demo-task')}>
+                  <Button variant="secondary" onClick={() => router.push('/demo-setup')}>
                     Start Demo
                   </Button>
                 </div>
