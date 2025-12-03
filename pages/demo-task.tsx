@@ -202,6 +202,12 @@ export default function DemoTask() {
 
     if (!user) return;
 
+    const demoCategory = getDemoCategory(user);
+    const skillsLabel =
+      user.skills && user.skills.length > 0
+        ? user.skills.join(", ")
+        : "Not specified";
+
     // random score between 70-100
     const score = Math.floor(Math.random() * 30) + 70;
 
@@ -217,6 +223,32 @@ export default function DemoTask() {
       demoTaskCompleted: true,
       demoTaskScore: score,
     });
+
+    // -----------------------------------------------------
+    // SEND WHATSAPP MESSAGE (opens WhatsApp with pre-filled DM)
+    // -----------------------------------------------------
+    const adminNumber = process.env.NEXT_PUBLIC_WHATSAPP_ADMIN_NUMBER;
+
+    if (adminNumber && typeof window !== "undefined") {
+      const whatsappMessage =
+        `New Demo Task Submission\n\n` +
+        `Name: ${user.fullName}\n` +
+        (user.email ? `Email: ${user.email}\n` : "") +
+        `Role: ${demoCategory}\n` +
+        `Skills: ${skillsLabel}\n` +
+        `Score (auto-evaluated): ${score}/100\n\n` +
+        `Submission:\n${submission}`;
+
+      const encoded = encodeURIComponent(whatsappMessage);
+      const url = `https://wa.me/${adminNumber}?text=${encoded}`;
+
+      // open in new tab (or same tab if you prefer)
+      window.open(url, "_blank");
+    } else {
+      console.warn(
+        "WhatsApp admin number not set. Add NEXT_PUBLIC_WHATSAPP_ADMIN_NUMBER in your .env.local file."
+      );
+    }
 
     alert(
       `Demo task submitted! Score: ${score}/100. You can now accept regular tasks.`
