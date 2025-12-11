@@ -1,324 +1,4 @@
-// import { useEffect, useState } from "react";
-// import { useRouter } from "next/router";
-// import Head from "next/head";
-
-// import Layout from "../components/Layout";
-// import Card from "../components/Card";
-// import Button from "../components/Button";
-
-// import { storage } from "../utils/storage";
-// import type { User, Payment } from "../utils/types";
-
-// import { format } from "date-fns";
-// import { DollarSign, TrendingUp, Download } from "lucide-react";
-
-// export default function Payments() {
-//   const router = useRouter();
-
-//   const [user, setUser] = useState<User | null>(null);
-//   const [payments, setPayments] = useState<Payment[]>([]);
-//   const [withdrawAmount, setWithdrawAmount] = useState("");
-//   const [showWithdraw, setShowWithdraw] = useState(false);
-//   const [loading, setLoading] = useState(true);
-//   const [submitting, setSubmitting] = useState(false);
-
-//   /* ----------------------------------------
-//    * LOAD USER + PAYMENTS
-//    * --------------------------------------*/
-//   useEffect(() => {
-//     const currentUser = storage.getCurrentUser();
-
-//     if (!currentUser || currentUser.role !== "worker") {
-//       router.replace("/login");
-//       return;
-//     }
-
-//     setUser(currentUser);
-//     loadPayments(currentUser.id);
-//   }, [router]);
-
-//   const loadPayments = async (userId: string) => {
-//     setLoading(true);
-//     try {
-//       // Load payment history
-//       const list = await storage.getPaymentsByUser(userId);
-//       setPayments(
-//         list.sort(
-//           (a, b) =>
-//             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-//         )
-//       );
-
-//       // Load updated user balance from Firestore
-//       const updatedUser = await storage.getUserById(userId);
-//       if (updatedUser) {
-//         setUser(updatedUser);
-//         storage.setCurrentUser(updatedUser); // sync session
-//       }
-//     } catch (err) {
-//       console.error("Failed to load payments:", err);
-//       alert("Failed to load payments.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   /* ----------------------------------------
-//    * HANDLE WITHDRAWAL
-//    * --------------------------------------*/
-//   const handleWithdraw = async () => {
-//     if (!user) return;
-
-//     const amount = parseFloat(withdrawAmount);
-
-//     if (isNaN(amount) || amount <= 0) {
-//       alert("Enter a valid amount");
-//       return;
-//     }
-
-//     if (amount > user.balance) {
-//       alert("Insufficient balance");
-//       return;
-//     }
-
-//     setSubmitting(true);
-
-//     try {
-//       // Create withdrawal payment record
-//       const paymentPayload: Omit<Payment, "id"> = {
-//         userId: user.id,
-//         amount,
-//         type: "withdrawal",
-//         status: "pending", // admin will approve / complete
-//         createdAt: new Date().toISOString(),
-//       };
-
-//       await storage.createPayment(paymentPayload);
-
-//       // If payout account is verified → deduct immediately
-//       if (user.payoutAccount?.verified) {
-//         const newBalance = user.balance - amount;
-
-//         await storage.updateUser(user.id, {
-//           balance: newBalance,
-//         });
-
-//         const updatedUser: User = {
-//           ...user,
-//           balance: newBalance,
-//         };
-
-//         storage.setCurrentUser(updatedUser);
-//         setUser(updatedUser);
-
-//         alert("Withdrawal request submitted!");
-//       } else {
-//         // Not verified → admin must approve
-//         alert("Withdrawal request sent to admin for approval.");
-//       }
-
-//       setWithdrawAmount("");
-//       setShowWithdraw(false);
-//       await loadPayments(user.id);
-//     } catch (err) {
-//       console.error("Withdrawal error:", err);
-//       alert("Failed to submit withdrawal request.");
-//     } finally {
-//       setSubmitting(false);
-//     }
-//   };
-
-//   if (loading || !user) return null;
-
-//   const totalEarnings = payments
-//     .filter((p) => p.type === "task-payment" && p.status === "completed")
-//     .reduce((sum, p) => sum + p.amount, 0);
-
-//   const totalWithdrawn = payments
-//     .filter((p) => p.type === "withdrawal" && p.status === "completed")
-//     .reduce((sum, p) => sum + p.amount, 0);
-
-//   return (
-//     <Layout>
-//       <Head>
-//         <title>Payments - Cehpoint</title>
-//       </Head>
-
-//       <div className="space-y-6">
-//         {/* HEADER */}
-//         <div className="flex justify-between items-center">
-//           <h1 className="text-3xl font-bold text-gray-900">
-//             Payments &amp; Earnings
-//           </h1>
-//           <Button onClick={() => setShowWithdraw((s) => !s)}>
-//             <Download size={18} />
-//             <span>Withdraw</span>
-//           </Button>
-//         </div>
-
-//         {/* SUMMARY CARDS */}
-//         <div className="grid md:grid-cols-3 gap-6">
-//           <Card className="text-center">
-//             <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
-//               <DollarSign size={24} />
-//             </div>
-//             <p className="text-3xl font-bold text-gray-900">
-//               ${user.balance.toFixed(2)}
-//             </p>
-//             <p className="text-sm text-gray-600 mt-1">Available Balance</p>
-//           </Card>
-
-//           <Card className="text-center">
-//             <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-//               <TrendingUp size={24} />
-//             </div>
-//             <p className="text-3xl font-bold text-gray-900">
-//               ${totalEarnings.toFixed(2)}
-//             </p>
-//             <p className="text-sm text-gray-600 mt-1">Total Earned</p>
-//           </Card>
-
-//           <Card className="text-center">
-//             <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
-//               <Download size={24} />
-//             </div>
-//             <p className="text-3xl font-bold text-gray-900">
-//               ${totalWithdrawn.toFixed(2)}
-//             </p>
-//             <p className="text-sm text-gray-600 mt-1">Total Withdrawn</p>
-//           </Card>
-//         </div>
-
-//         {/* WITHDRAW SECTION */}
-//         {showWithdraw && (
-//           <Card className="bg-indigo-50">
-//             <h3 className="text-lg font-semibold mb-4">Withdraw Funds</h3>
-//             <div className="space-y-4">
-//               <div>
-//                 <label className="block text-sm font-medium mb-2">
-//                   Amount ($)
-//                 </label>
-//                 <input
-//                   type="number"
-//                   value={withdrawAmount}
-//                   onChange={(e) => setWithdrawAmount(e.target.value)}
-//                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600"
-//                   placeholder="Enter amount"
-//                   max={user.balance}
-//                 />
-//                 <p className="text-sm text-gray-600 mt-1">
-//                   Available: ${user.balance.toFixed(2)}
-//                 </p>
-//               </div>
-
-//               {!user.payoutAccount?.verified && (
-//                 <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-//                   <p className="text-sm text-yellow-800">
-//                     Your payout account is not verified. Withdrawal requests
-//                     will be sent to the admin for approval.
-//                   </p>
-//                 </div>
-//               )}
-
-//               <div className="flex space-x-3">
-//                 <Button onClick={handleWithdraw} disabled={submitting}>
-//                   {submitting ? "Processing…" : "Confirm Withdrawal"}
-//                 </Button>
-//                 <Button
-//                   variant="outline"
-//                   onClick={() => setShowWithdraw(false)}
-//                   disabled={submitting}
-//                 >
-//                   Cancel
-//                 </Button>
-//               </div>
-//             </div>
-//           </Card>
-//         )}
-
-//         {/* TRANSACTION HISTORY */}
-//         <Card>
-//           <h2 className="text-xl font-semibold mb-4">Transaction History</h2>
-//           {payments.length === 0 ? (
-//             <p className="text-center text-gray-500 py-8">
-//               No transactions yet
-//             </p>
-//           ) : (
-//             <div className="space-y-3">
-//               {payments.map((payment) => {
-//                 const isWithdrawal = payment.type === "withdrawal";
-//                 const isTaskPayment = payment.type === "task-payment";
-
-//                 const statusLabel =
-//                   isWithdrawal && payment.status === "pending"
-//                     ? "Pending admin/processing"
-//                     : payment.status;
-
-//                 return (
-//                   <div
-//                     key={payment.id}
-//                     className="flex justify-between items-center p-4 border border-gray-200 rounded-lg"
-//                   >
-//                     <div>
-//                       <p className="font-medium">
-//                         {isTaskPayment ? "Task Payment" : "Withdrawal"}
-//                       </p>
-//                       <p className="text-sm text-gray-600">
-//                         {format(
-//                           new Date(payment.createdAt),
-//                           "MMM dd, yyyy HH:mm"
-//                         )}
-//                       </p>
-//                     </div>
-//                     <div className="text-right">
-//                       <p
-//                         className={`font-semibold ${
-//                           isTaskPayment ? "text-green-600" : "text-red-600"
-//                         }`}
-//                       >
-//                         {isTaskPayment ? "+" : "-"}$
-//                         {payment.amount.toFixed(2)}
-//                       </p>
-//                       <span
-//                         className={`text-xs px-2 py-1 rounded ${
-//                           payment.status === "completed"
-//                             ? "bg-green-100 text-green-700"
-//                             : payment.status === "pending"
-//                             ? "bg-yellow-100 text-yellow-700"
-//                             : "bg-red-100 text-red-700"
-//                         }`}
-//                       >
-//                         {statusLabel}
-//                       </span>
-//                     </div>
-//                   </div>
-//                 );
-//               })}
-//             </div>
-//           )}
-//         </Card>
-//       </div>
-//     </Layout>
-//   );
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// pages/payments.tsx
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
@@ -328,10 +8,27 @@ import Card from "../components/Card";
 import Button from "../components/Button";
 
 import { storage } from "../utils/storage";
-import type { User, Payment } from "../utils/types";
+import type { User, Payment, Currency } from "../utils/types";
 
 import { format } from "date-fns";
 import { DollarSign, TrendingUp, Download } from "lucide-react";
+
+const INR_RATE = 89; // 🔹 base: 1 USD ≈ 90.14 INR (example)
+
+// Format helpers
+function formatMoney(amountUsd: number, currency: Currency): string {
+  const symbol = currency === "INR" ? "₹" : "$";
+  const converted = currency === "INR" ? amountUsd * INR_RATE : amountUsd;
+  return `${symbol}${converted.toFixed(2)}`;
+}
+
+function toDisplay(amountUsd: number, currency: Currency): number {
+  return currency === "INR" ? amountUsd * INR_RATE : amountUsd;
+}
+
+function toBase(enteredAmount: number, currency: Currency): number {
+  return currency === "INR" ? enteredAmount / INR_RATE : enteredAmount;
+}
 
 export default function Payments() {
   const router = useRouter();
@@ -346,13 +43,27 @@ export default function Payments() {
   // payout details state
   const [showPayoutForm, setShowPayoutForm] = useState(false);
   const [savingPayout, setSavingPayout] = useState(false);
-  const [payoutType, setPayoutType] = useState<"upi" | "bank">("upi");
+  const [payoutType, setPayoutType] = useState<
+    "upi" | "bank" | "paypal" | "crypto"
+  >("upi");
+
   const [upiId, setUpiId] = useState("");
   const [bankHolderName, setBankHolderName] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankIfsc, setBankIfsc] = useState("");
-  const [withdrawMethod, setWithdrawMethod] = useState<"upi" | "bank">("upi");
+
+  const [paypalEmail, setPaypalEmail] = useState("");
+  const [cryptoNetwork, setCryptoNetwork] = useState("");
+  const [cryptoAddress, setCryptoAddress] = useState("");
+
+  const [withdrawMethod, setWithdrawMethod] = useState<
+    "upi" | "bank" | "paypal" | "crypto"
+  >("upi");
+
+  // 🔹 display currency state
+  const [currency, setCurrency] = useState<Currency>("USD");
+  const [updatingCurrency, setUpdatingCurrency] = useState(false);
 
   /* ----------------------------------------
    * LOAD USER + PAYMENTS
@@ -367,6 +78,7 @@ export default function Payments() {
 
     hydratePayoutState(currentUser);
     setUser(currentUser);
+    setCurrency(currentUser.preferredCurrency || "USD");
     loadPayments(currentUser.id);
   }, [router]);
 
@@ -376,6 +88,12 @@ export default function Payments() {
     if (u.payoutAccount.accountType === "bank") {
       setPayoutType("bank");
       setWithdrawMethod("bank");
+    } else if (u.payoutAccount.accountType === "paypal") {
+      setPayoutType("paypal");
+      setWithdrawMethod("paypal");
+    } else if (u.payoutAccount.accountType === "crypto") {
+      setPayoutType("crypto");
+      setWithdrawMethod("crypto");
     } else {
       setPayoutType("upi");
       setWithdrawMethod("upi");
@@ -386,6 +104,10 @@ export default function Payments() {
     setBankName(u.payoutAccount.bankName ?? "");
     setBankAccountNumber(u.payoutAccount.bankAccountNumber ?? "");
     setBankIfsc(u.payoutAccount.bankIfsc ?? "");
+
+    setPaypalEmail(u.payoutAccount.paypalEmail ?? "");
+    setCryptoNetwork(u.payoutAccount.cryptoNetwork ?? "");
+    setCryptoAddress(u.payoutAccount.cryptoAddress ?? "");
   };
 
   const loadPayments = async (userId: string) => {
@@ -402,6 +124,7 @@ export default function Payments() {
       const updatedUser = await storage.getUserById(userId);
       if (updatedUser) {
         setUser(updatedUser);
+        setCurrency(updatedUser.preferredCurrency || "USD");
         hydratePayoutState(updatedUser);
         storage.setCurrentUser(updatedUser);
       }
@@ -414,6 +137,33 @@ export default function Payments() {
   };
 
   /* ----------------------------------------
+   * HANDLE CURRENCY CHANGE (PERSIST)
+   * --------------------------------------*/
+  const handleCurrencyChange = async (value: Currency) => {
+    if (!user) return;
+    if (value === currency) return;
+
+    setCurrency(value);
+    setUpdatingCurrency(true);
+
+    try {
+      const updatedUser: User = {
+        ...user,
+        preferredCurrency: value,
+      };
+
+      await storage.updateUser(user.id, { preferredCurrency: value });
+      storage.setCurrentUser(updatedUser);
+      setUser(updatedUser);
+    } catch (err) {
+      console.error("Failed to update currency preference:", err);
+      alert("Failed to update currency preference.");
+    } finally {
+      setUpdatingCurrency(false);
+    }
+  };
+
+  /* ----------------------------------------
    * SAVE / UPDATE PAYOUT DETAILS
    * --------------------------------------*/
   const handleSavePayoutDetails = async () => {
@@ -422,12 +172,14 @@ export default function Payments() {
     try {
       setSavingPayout(true);
 
+      // validate based on type
       if (payoutType === "upi") {
         if (!upiId.trim()) {
           alert("Please enter a valid UPI ID");
+          setSavingPayout(false);
           return;
         }
-      } else {
+      } else if (payoutType === "bank") {
         if (
           !bankHolderName.trim() ||
           !bankName.trim() ||
@@ -435,10 +187,24 @@ export default function Payments() {
           !bankIfsc.trim()
         ) {
           alert("Please fill all bank details");
+          setSavingPayout(false);
+          return;
+        }
+      } else if (payoutType === "paypal") {
+        if (!paypalEmail.trim()) {
+          alert("Please enter your PayPal email");
+          setSavingPayout(false);
+          return;
+        }
+      } else if (payoutType === "crypto") {
+        if (!cryptoNetwork.trim() || !cryptoAddress.trim()) {
+          alert("Please fill crypto network and address");
+          setSavingPayout(false);
           return;
         }
       }
 
+      // build payoutAccount object
       let payoutAccount: any;
 
       if (payoutType === "upi") {
@@ -447,9 +213,8 @@ export default function Payments() {
           verified: user.payoutAccount?.verified ?? false,
           accountNumber: upiId.trim(),
           upiId: upiId.trim(),
-          // no bank fields at all here
         };
-      } else {
+      } else if (payoutType === "bank") {
         payoutAccount = {
           accountType: "bank" as const,
           verified: user.payoutAccount?.verified ?? false,
@@ -458,7 +223,22 @@ export default function Payments() {
           bankName: bankName.trim(),
           bankAccountNumber: bankAccountNumber.trim(),
           bankIfsc: bankIfsc.trim(),
-          // no upiId here
+        };
+      } else if (payoutType === "paypal") {
+        payoutAccount = {
+          accountType: "paypal" as const,
+          verified: user.payoutAccount?.verified ?? false,
+          accountNumber: paypalEmail.trim(),
+          paypalEmail: paypalEmail.trim(),
+        };
+      } else {
+        // crypto
+        payoutAccount = {
+          accountType: "crypto" as const,
+          verified: user.payoutAccount?.verified ?? false,
+          accountNumber: cryptoAddress.trim(),
+          cryptoNetwork: cryptoNetwork.trim(),
+          cryptoAddress: cryptoAddress.trim(),
         };
       }
 
@@ -484,19 +264,22 @@ export default function Payments() {
   };
 
   /* ----------------------------------------
-   * HANDLE WITHDRAWAL
+   * HANDLE WITHDRAWAL (REQUEST ONLY)
    * --------------------------------------*/
   const handleWithdraw = async () => {
     if (!user) return;
 
-    const amount = parseFloat(withdrawAmount);
+    const enteredDisplayAmount = parseFloat(withdrawAmount);
 
-    if (isNaN(amount) || amount <= 0) {
+    if (isNaN(enteredDisplayAmount) || enteredDisplayAmount <= 0) {
       alert("Enter a valid amount");
       return;
     }
 
-    if (amount > user.balance) {
+    // 🔹 convert from display currency back to USD (base)
+    const baseAmount = toBase(enteredDisplayAmount, currency);
+
+    if (baseAmount > user.balance) {
       alert("Insufficient balance");
       return;
     }
@@ -504,8 +287,10 @@ export default function Payments() {
     const pa = user.payoutAccount;
     const hasUpi = !!pa?.upiId;
     const hasBank = !!pa?.bankAccountNumber;
+    const hasPaypal = !!pa?.paypalEmail;
+    const hasCrypto = !!pa?.cryptoAddress;
 
-    if (!pa || (!hasUpi && !hasBank)) {
+    if (!pa || (!hasUpi && !hasBank && !hasPaypal && !hasCrypto)) {
       alert("Please add payout details before requesting a withdrawal.");
       return;
     }
@@ -520,19 +305,38 @@ export default function Payments() {
       return;
     }
 
-    const payoutMethodDetails =
-      withdrawMethod === "upi"
-        ? pa!.upiId!
-        : `${pa!.bankName ?? ""} - ${pa!.bankAccountNumber}`;
+    if (withdrawMethod === "paypal" && !hasPaypal) {
+      alert("You have not added a PayPal email yet.");
+      return;
+    }
+
+    if (withdrawMethod === "crypto" && !hasCrypto) {
+      alert("You have not added a crypto address yet.");
+      return;
+    }
+
+    let payoutMethodDetails = "";
+
+    if (withdrawMethod === "upi") {
+      payoutMethodDetails = pa!.upiId || "";
+    } else if (withdrawMethod === "bank") {
+      payoutMethodDetails = `${pa!.bankName ?? ""} - ${pa!.bankAccountNumber}`;
+    } else if (withdrawMethod === "paypal") {
+      payoutMethodDetails = `PayPal: ${pa!.paypalEmail}`;
+    } else if (withdrawMethod === "crypto") {
+      payoutMethodDetails = `Crypto: ${pa!.cryptoNetwork ?? ""} - ${
+        pa!.cryptoAddress ?? ""
+      }`;
+    }
 
     setSubmitting(true);
 
     try {
       const paymentPayload: Omit<Payment, "id"> = {
         userId: user.id,
-        amount,
+        amount: baseAmount, // 🔹 store in BASE (USD)
         type: "withdrawal",
-        status: "pending",
+        status: "pending", // admin will approve
         createdAt: new Date().toISOString(),
         payoutMethod: withdrawMethod,
         payoutMethodDetails,
@@ -540,25 +344,7 @@ export default function Payments() {
 
       await storage.createPayment(paymentPayload);
 
-      if (user.payoutAccount?.verified) {
-        const newBalance = user.balance - amount;
-
-        await storage.updateUser(user.id, {
-          balance: newBalance,
-        });
-
-        const updatedUser: User = {
-          ...user,
-          balance: newBalance,
-        };
-
-        storage.setCurrentUser(updatedUser);
-        setUser(updatedUser);
-
-        alert("Withdrawal request submitted!");
-      } else {
-        alert("Withdrawal request sent to admin for approval.");
-      }
+      alert("Withdrawal request sent to admin for approval.");
 
       setWithdrawAmount("");
       setShowWithdraw(false);
@@ -583,6 +369,10 @@ export default function Payments() {
 
   const hasUpi = !!user.payoutAccount?.upiId;
   const hasBank = !!user.payoutAccount?.bankAccountNumber;
+  const hasPaypal = !!user.payoutAccount?.paypalEmail;
+  const hasCrypto = !!user.payoutAccount?.cryptoAddress;
+
+  const displayBalance = toDisplay(user.balance, currency);
 
   return (
     <Layout>
@@ -591,23 +381,29 @@ export default function Payments() {
       </Head>
 
       <div className="space-y-6">
-        {/* HEADER */}
-        <div className="flex justify-between items-center">
+        {/* HEADER + CURRENCY SELECT */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <h1 className="text-3xl font-bold text-gray-900">
             Payments &amp; Earnings
           </h1>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setShowPayoutForm((s) => !s)}
+         
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Display currency:</span>
+            <select
+              value={currency}
+              onChange={(e) =>
+                handleCurrencyChange(e.target.value as Currency)
+              }
+              disabled={updatingCurrency}
+              className="px-3 py-1.5 border rounded-lg text-sm"
             >
-              <span>{user.payoutAccount ? "Edit" : "Add"} Payment Details</span>
-            </Button>
-            <Button onClick={() => setShowWithdraw((s) => !s)}>
-              <Download size={18} />
-              <span>Withdraw</span>
-            </Button>
+              <option value="USD">USD ($)</option>
+              <option value="INR">INR (₹)</option>
+            </select>
           </div>
+
+           <Button onClick={() => setShowWithdraw((s) => !s)}> <Download size={18} /> <span className="">Withdraw</span> </Button>
         </div>
 
         {/* SUMMARY CARDS */}
@@ -617,7 +413,7 @@ export default function Payments() {
               <DollarSign size={24} />
             </div>
             <p className="text-3xl font-bold text-gray-900">
-              ${user.balance.toFixed(2)}
+              {formatMoney(user.balance, currency)}
             </p>
             <p className="text-sm text-gray-600 mt-1">Available Balance</p>
           </Card>
@@ -627,7 +423,7 @@ export default function Payments() {
               <TrendingUp size={24} />
             </div>
             <p className="text-3xl font-bold text-gray-900">
-              ${totalEarnings.toFixed(2)}
+              {formatMoney(totalEarnings, currency)}
             </p>
             <p className="text-sm text-gray-600 mt-1">Total Earned</p>
           </Card>
@@ -637,40 +433,248 @@ export default function Payments() {
               <Download size={24} />
             </div>
             <p className="text-3xl font-bold text-gray-900">
-              ${totalWithdrawn.toFixed(2)}
+              {formatMoney(totalWithdrawn, currency)}
             </p>
             <p className="text-sm text-gray-600 mt-1">Total Withdrawn</p>
           </Card>
         </div>
 
-        {/* PAYOUT DETAILS FORM */}
-        {showPayoutForm && (
-          <Card className="bg-white border border-indigo-100">
-            <h3 className="text-lg font-semibold mb-4">Payment Details</h3>
-
+        {/* WITHDRAW SECTION */}
+        {showWithdraw && (
+          <Card className="bg-indigo-50">
+            <h3 className="text-lg font-semibold mb-4">Withdraw Funds</h3>
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium mb-2">Select Method</p>
-                <div className="flex gap-4">
+                <label className="block text-sm font-medium mb-2">
+                  Amount ({currency === "INR" ? "₹" : "$"})
+                </label>
+                <input
+                  type="number"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600"
+                  placeholder={`Enter amount in ${currency}`}
+                  max={displayBalance}
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  Available: {formatMoney(user.balance, currency)}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Withdraw To
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setWithdrawMethod("upi")}
+                    className={`px-4 py-2 rounded-lg border ${
+                      withdrawMethod === "upi"
+                        ? "border-indigo-600 bg-indigo-50"
+                        : "border-gray-300"
+                    }`}
+                    disabled={!hasUpi}
+                  >
+                    UPI
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWithdrawMethod("bank")}
+                    className={`px-4 py-2 rounded-lg border ${
+                      withdrawMethod === "bank"
+                        ? "border-indigo-600 bg-indigo-50"
+                        : "border-gray-300"
+                    }`}
+                    disabled={!hasBank}
+                  >
+                    Bank
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWithdrawMethod("paypal")}
+                    className={`px-4 py-2 rounded-lg border ${
+                      withdrawMethod === "paypal"
+                        ? "border-indigo-600 bg-indigo-50"
+                        : "border-gray-300"
+                    }`}
+                    disabled={!hasPaypal}
+                  >
+                    PayPal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWithdrawMethod("crypto")}
+                    className={`px-4 py-2 rounded-lg border ${
+                      withdrawMethod === "crypto"
+                        ? "border-indigo-600 bg-indigo-50"
+                        : "border-gray-300"
+                    }`}
+                    disabled={!hasCrypto}
+                  >
+                    Crypto
+                  </button>
+                </div>
+                {!hasUpi && !hasBank && !hasPaypal && !hasCrypto && (
+                  <p className="text-xs text-red-600 mt-1">
+                    Add payout details first to withdraw.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex space-x-3">
+                <Button onClick={handleWithdraw} disabled={submitting}>
+                  {submitting ? "Processing…" : "Request Withdrawal"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowWithdraw(false)}
+                  disabled={submitting}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* PAYOUT DETAILS SECTION */}
+        <Card>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Payout Details</h2>
+            <Button
+              variant="outline"
+              onClick={() => setShowPayoutForm((s) => !s)}
+            >
+              {showPayoutForm ? "Close" : user.payoutAccount ? "Edit" : "Add"}
+            </Button>
+          </div>
+
+          {!user.payoutAccount && !showPayoutForm && (
+            <p className="text-sm text-gray-600">
+              No payout details added yet. Click &quot;Add&quot; to set up UPI,
+              bank, PayPal, or crypto account.
+            </p>
+          )}
+
+          {user.payoutAccount && !showPayoutForm && (
+            <div className="space-y-2 text-sm text-gray-700">
+              <p>
+                <span className="font-medium">Type:</span>{" "}
+                {user.payoutAccount.accountType === "upi"
+                  ? "UPI"
+                  : user.payoutAccount.accountType === "bank"
+                  ? "Bank"
+                  : user.payoutAccount.accountType === "paypal"
+                  ? "PayPal"
+                  : "Crypto"}
+              </p>
+
+              {user.payoutAccount.accountType === "upi" && (
+                <p>
+                  <span className="font-medium">UPI ID:</span>{" "}
+                  {user.payoutAccount.upiId}
+                </p>
+              )}
+
+              {user.payoutAccount.accountType === "bank" && (
+                <>
+                  <p>
+                    <span className="font-medium">Account Holder:</span>{" "}
+                    {user.payoutAccount.accountHolderName}
+                  </p>
+                  <p>
+                    <span className="font-medium">Bank:</span>{" "}
+                    {user.payoutAccount.bankName}
+                  </p>
+                  <p>
+                    <span className="font-medium">Account Number:</span>{" "}
+                    {user.payoutAccount.bankAccountNumber}
+                  </p>
+                  <p>
+                    <span className="font-medium">IFSC:</span>{" "}
+                    {user.payoutAccount.bankIfsc}
+                  </p>
+                </>
+              )}
+
+              {user.payoutAccount.accountType === "paypal" && (
+                <p>
+                  <span className="font-medium">PayPal Email:</span>{" "}
+                  {user.payoutAccount.paypalEmail}
+                </p>
+              )}
+
+              {user.payoutAccount.accountType === "crypto" && (
+                <>
+                  <p>
+                    <span className="font-medium">Network:</span>{" "}
+                    {user.payoutAccount.cryptoNetwork}
+                  </p>
+                  <p>
+                    <span className="font-medium">Address:</span>{" "}
+                    {user.payoutAccount.cryptoAddress}
+                  </p>
+                </>
+              )}
+
+              <p>
+                <span className="font-medium">Status:</span>{" "}
+                {user.payoutAccount.verified ? "Verified" : "Not Verified"}
+              </p>
+            </div>
+          )}
+
+          {showPayoutForm && (
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Payout Type
+                </label>
+                <div className="flex flex-wrap gap-3">
                   <button
                     type="button"
                     onClick={() => setPayoutType("upi")}
-                    className={`px-4 py-2 rounded-lg border text-sm font-medium ${payoutType === "upi"
-                        ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                      }`}
+                    className={`px-4 py-2 rounded-lg border ${
+                      payoutType === "upi"
+                        ? "border-indigo-600 bg-indigo-50"
+                        : "border-gray-300"
+                    }`}
                   >
                     UPI
                   </button>
                   <button
                     type="button"
                     onClick={() => setPayoutType("bank")}
-                    className={`px-4 py-2 rounded-lg border text-sm font-medium ${payoutType === "bank"
-                        ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                      }`}
+                    className={`px-4 py-2 rounded-lg border ${
+                      payoutType === "bank"
+                        ? "border-indigo-600 bg-indigo-50"
+                        : "border-gray-300"
+                    }`}
                   >
-                    Bank Account
+                    Bank
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPayoutType("paypal")}
+                    className={`px-4 py-2 rounded-lg border ${
+                      payoutType === "paypal"
+                        ? "border-indigo-600 bg-indigo-50"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    PayPal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPayoutType("crypto")}
+                    className={`px-4 py-2 rounded-lg border ${
+                      payoutType === "crypto"
+                        ? "border-indigo-600 bg-indigo-50"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    Crypto
                   </button>
                 </div>
               </div>
@@ -684,15 +688,15 @@ export default function Payments() {
                     type="text"
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600"
-                    placeholder="yourname@upi"
+                    className="w-full px-4 py-2 border rounded-lg"
+                    placeholder="your-upi@bank"
                   />
                 </div>
               )}
 
               {payoutType === "bank" && (
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
+                <>
+                  <div>
                     <label className="block text-sm font-medium mb-2">
                       Account Holder Name
                     </label>
@@ -700,7 +704,7 @@ export default function Payments() {
                       type="text"
                       value={bankHolderName}
                       onChange={(e) => setBankHolderName(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600"
+                      className="w-full px-4 py-2 border rounded-lg"
                     />
                   </div>
                   <div>
@@ -711,7 +715,7 @@ export default function Payments() {
                       type="text"
                       value={bankName}
                       onChange={(e) => setBankName(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600"
+                      className="w-full px-4 py-2 border rounded-lg"
                     />
                   </div>
                   <div>
@@ -721,10 +725,8 @@ export default function Payments() {
                     <input
                       type="text"
                       value={bankAccountNumber}
-                      onChange={(e) =>
-                        setBankAccountNumber(e.target.value)
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600"
+                      onChange={(e) => setBankAccountNumber(e.target.value)}
+                      className="w-full px-4 py-2 border rounded-lg"
                     />
                   </div>
                   <div>
@@ -735,18 +737,59 @@ export default function Payments() {
                       type="text"
                       value={bankIfsc}
                       onChange={(e) => setBankIfsc(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600"
+                      className="w-full px-4 py-2 border rounded-lg"
                     />
                   </div>
+                </>
+              )}
+
+              {payoutType === "paypal" && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    PayPal Email
+                  </label>
+                  <input
+                    type="email"
+                    value={paypalEmail}
+                    onChange={(e) => setPaypalEmail(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    placeholder="you@example.com"
+                  />
                 </div>
               )}
 
+              {payoutType === "crypto" && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Crypto Network
+                    </label>
+                    <input
+                      type="text"
+                      value={cryptoNetwork}
+                      onChange={(e) => setCryptoNetwork(e.target.value)}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      placeholder="e.g., Ethereum, Solana, Polygon"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Wallet Address
+                    </label>
+                    <input
+                      type="text"
+                      value={cryptoAddress}
+                      onChange={(e) => setCryptoAddress(e.target.value)}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      placeholder="0x..."
+                    />
+                  </div>
+                </>
+              )}
+
               <div className="flex gap-3">
-                <Button
-                  onClick={handleSavePayoutDetails}
-                  disabled={savingPayout}
-                >
-                  {savingPayout ? "Saving…" : "Save Details"}
+                <Button onClick={handleSavePayoutDetails} disabled={savingPayout}>
+                  {savingPayout ? "Saving…" : "Save Payout Details"}
                 </Button>
                 <Button
                   variant="outline"
@@ -757,103 +800,8 @@ export default function Payments() {
                 </Button>
               </div>
             </div>
-          </Card>
-        )}
-
-        {/* WITHDRAW SECTION */}
-        {showWithdraw && (
-          <Card className="bg-indigo-50">
-            <h3 className="text-lg font-semibold mb-4">Withdraw Funds</h3>
-
-            {!hasUpi && !hasBank && (
-              <div className="bg-red-50 border border-red-200 p-3 rounded-lg mb-4">
-                <p className="text-sm text-red-800">
-                  You haven&apos;t added any payment details yet. Please add
-                  your UPI ID or bank details before requesting a withdrawal.
-                </p>
-              </div>
-            )}
-
-            {(hasUpi || hasBank) && (
-              <div className="mb-4">
-                <p className="text-sm font-medium mb-2">
-                  Choose withdrawal method
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  {hasUpi && (
-                    <button
-                      type="button"
-                      onClick={() => setWithdrawMethod("upi")}
-                      className={`px-4 py-2 rounded-lg border text-sm font-medium ${withdrawMethod === "upi"
-                          ? "border-indigo-600 bg-white text-indigo-700"
-                          : "border-gray-300 text-gray-700 hover:bg-white"
-                        }`}
-                    >
-                      UPI ({user.payoutAccount!.upiId})
-                    </button>
-                  )}
-                  {hasBank && (
-                    <button
-                      type="button"
-                      onClick={() => setWithdrawMethod("bank")}
-                      className={`px-4 py-2 rounded-lg border text-sm font-medium ${withdrawMethod === "bank"
-                          ? "border-indigo-600 bg_WHITE text-indigo-700"
-                          : "border-gray-300 text-gray-700 hover:bg-white"
-                        }`}
-                    >
-                      Bank ({user.payoutAccount!.bankName} ••••
-                      {user.payoutAccount!.bankAccountNumber?.slice(-4)})
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Amount ($)
-                </label>
-                <input
-                  type="number"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600"
-                  placeholder="Enter amount"
-                  max={user.balance}
-                />
-                <p className="text-sm text-gray-600 mt-1">
-                  Available: ${user.balance.toFixed(2)}
-                </p>
-              </div>
-
-              {!user.payoutAccount?.verified && (
-                <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    Your payout account is not verified. Withdrawal requests
-                    will be sent to the admin for approval.
-                  </p>
-                </div>
-              )}
-
-              <div className="flex space-x-3">
-                <Button
-                  onClick={handleWithdraw}
-                  disabled={submitting || (!hasUpi && !hasBank)}
-                >
-                  {submitting ? "Processing…" : "Confirm Withdrawal"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowWithdraw(false)}
-                  disabled={submitting}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </Card>
-        )}
+          )}
+        </Card>
 
         {/* TRANSACTION HISTORY */}
         <Card>
@@ -888,30 +836,29 @@ export default function Payments() {
                           "MMM dd, yyyy HH:mm"
                         )}
                       </p>
-                      {isWithdrawal && payment.payoutMethod && (
+                      {payment.payoutMethodDetails && isWithdrawal && (
                         <p className="text-xs text-gray-500 mt-1">
-                          Method:{" "}
-                          {payment.payoutMethod === "upi"
-                            ? `UPI (${payment.payoutMethodDetails})`
-                            : `Bank (${payment.payoutMethodDetails})`}
+                          To: {payment.payoutMethodDetails}
                         </p>
                       )}
                     </div>
                     <div className="text-right">
                       <p
-                        className={`font-semibold ${isTaskPayment ? "text-green-600" : "text-red-600"
-                          }`}
+                        className={`font-semibold ${
+                          isTaskPayment ? "text-green-600" : "text-red-600"
+                        }`}
                       >
-                        {isTaskPayment ? "+" : "-"}$
-                        {payment.amount.toFixed(2)}
+                        {isTaskPayment ? "+" : "-"}
+                        {formatMoney(payment.amount, currency)}
                       </p>
                       <span
-                        className={`text-xs px-2 py-1 rounded ${payment.status === "completed"
+                        className={`text-xs px-2 py-1 rounded ${
+                          payment.status === "completed"
                             ? "bg-green-100 text-green-700"
                             : payment.status === "pending"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
                       >
                         {statusLabel}
                       </span>

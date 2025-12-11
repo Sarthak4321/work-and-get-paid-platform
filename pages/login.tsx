@@ -9,7 +9,15 @@ import { firebaseLogin } from "../utils/authEmailPassword";
 import { googleAuth, githubAuth } from "../utils/authProviders";
 
 import { db } from "../utils/firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { storage } from "../utils/storage";
 import { User } from "../utils/types";
 
@@ -87,47 +95,72 @@ export default function Login() {
      GOOGLE LOGIN
   =============================================================== */
   const handleGoogleLogin = async () => {
-    try {
-      const result = await googleAuth();
-      const uid = result.user.uid;
+  try {
+    const result = await googleAuth();
+    const fbUser = result.user;
+    const uid = fbUser.uid;
 
-      const snap = await getDoc(doc(db, "users", uid));
-      if (!snap.exists()) {
-        setError("Account does not exist. Please sign up first.");
-        return;
+    // 1) Try direct doc `/users/{uid}`
+    let snap = await getDoc(doc(db, "users", uid));
+
+    // 2) If not found, fallback: query by uid field
+    if (!snap.exists()) {
+      const usersCol = collection(db, "users");
+      const qByUid = query(usersCol, where("uid", "==", uid));
+      const qSnap = await getDocs(qByUid);
+
+      if (!qSnap.empty) {
+        snap = qSnap.docs[0];
+      } else {
+        // Optional 3rd fallback: query by email, in case older docs only stored email
+        if (fbUser.email) {
+          const qByEmail = query(usersCol, where("email", "==", fbUser.email));
+          const emailSnap = await getDocs(qByEmail);
+          if (!emailSnap.empty) {
+            snap = emailSnap.docs[0];
+          } else {
+            setError("Account does not exist. Please sign up first.");
+            return;
+          }
+        } else {
+          setError("Account does not exist. Please sign up first.");
+          return;
+        }
       }
-
-      const user = snap.data();
-
-      /** SAVE SESSION */
-      const fullUser: User = {
-        id: uid,
-        email: user.email || "",
-        fullName: user.fullName || "",
-        password: "",
-        phone: user.phone || "",
-        skills: user.skills || [],
-        experience: user.experience || "",
-        timezone: user.timezone || "",
-        preferredWeeklyPayout: user.preferredWeeklyPayout || 0,
-        role: user.role || "worker",
-        accountStatus: user.accountStatus || "pending",
-        knowledgeScore: user.knowledgeScore || 0,
-        demoTaskCompleted: user.demoTaskCompleted || false,
-        demoTaskScore: user.demoTaskScore || 0,
-        createdAt: user.createdAt || new Date().toISOString(),
-        balance: user.balance || 0,
-        emailVerified: user.emailVerified ?? true,
-      };
-
-      storage.setCurrentUser(fullUser);
-
-      router.push(user.role === "admin" ? "/admin" : "/dashboard");
-    } catch (err) {
-      console.error(err);
-      alert("Google Login Failed");
     }
-  };
+
+    const user = snap.data();
+    const userId = snap.id;
+
+    /** SAVE SESSION */
+    const fullUser: User = {
+      id: userId,
+      email: user.email || fbUser.email || "",
+      fullName: user.fullName || fbUser.displayName || "",
+      password: "",
+      phone: user.phone || "",
+      skills: user.skills || [],
+      experience: user.experience || "",
+      timezone: user.timezone || "",
+      preferredWeeklyPayout: user.preferredWeeklyPayout || 0,
+      role: user.role || "worker",
+      accountStatus: user.accountStatus || "pending",
+      knowledgeScore: user.knowledgeScore || 0,
+      demoTaskCompleted: user.demoTaskCompleted || false,
+      demoTaskScore: user.demoTaskScore || 0,
+      createdAt: user.createdAt || new Date().toISOString(),
+      balance: user.balance || 0,
+      emailVerified: user.emailVerified ?? true,
+    };
+
+    storage.setCurrentUser(fullUser);
+    router.push(fullUser.role === "admin" ? "/admin" : "/dashboard");
+  } catch (err) {
+    console.error(err);
+    alert("Google Login Failed");
+  }
+};
+
 
   /* ============================================================
      GITHUB LOGIN
@@ -240,6 +273,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password" 
             />
 
             <Button type="submit" fullWidth>

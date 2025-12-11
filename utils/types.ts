@@ -1,13 +1,181 @@
+// // utils/types.ts
+
+// export type AccountStatus = "pending" | "active" | "suspended" | "terminated";
+// export type UserRole = "worker" | "admin";
+
+// /* ============================
+//    PAYOUT ACCOUNT
+// ============================ */
+// export interface PayoutAccount {
+//   accountType: "upi" | "bank" | "paypal" | "crypto";
+//   verified: boolean;
+
+//   // UPI
+//   upiId?: string;
+
+//   // Bank details
+//   accountHolderName?: string;
+//   bankName?: string;
+//   bankAccountNumber?: string;
+//   bankIfsc?: string;
+
+//   // PayPal
+//   paypalEmail?: string;
+
+//   // Crypto
+//   cryptoNetwork?: string;
+//   cryptoAddress?: string;
+
+//   accountNumber: string;
+// }
+
+
+// /* ============================
+//    USER
+// ============================ */
+// export interface User {
+//   id: string;
+//   email: string;
+//   password: string;
+//   fullName: string;
+
+//   phone: string;
+//   skills: string[];
+//   experience: string;
+//   timezone: string;                // e.g. "Asia/Kolkata"
+
+//   preferredWeeklyPayout: number;   // numeric amount
+//   payoutCurrency?: "INR" | "USD";  // <-- NEW (optional so old docs still valid)
+
+//   role: UserRole;
+//   accountStatus: AccountStatus;
+
+//   knowledgeScore: number;
+//   demoTaskCompleted: boolean;
+//   demoTaskScore?: number;
+
+//   payoutAccount?: PayoutAccount;
+
+//   emailVerified: boolean;
+
+//   createdAt: string;
+//   balance: number;
+
+//   uid?: string;  // Firebase Auth UID
+// }
+
+// /* ============================
+//    TASK
+// ============================ */
+// export interface Task {
+//   id: string;
+
+//   title: string;
+//   description: string;
+//   category: string;
+
+//   skills: string[];
+//   weeklyPayout: number;
+//   deadline: string; // ISO date or '' if not provided
+
+//   status:
+//     | "available"
+//     | "assigned"
+//     | "in-progress"
+//     | "submitted"
+//     | "completed"
+//     | "rejected";
+
+//   createdBy: string;
+//   createdAt: string;
+
+//   assignedTo: string | null;
+//   assignedAt?: string;
+
+//   submittedAt?: string;
+//   submissionUrl?: string;
+
+//   completedAt?: string;
+//   feedback?: string;
+// }
+
+// /* ============================
+//    DAILY SUBMISSION
+// ============================ */
+// export interface DailySubmission {
+//   id: string;
+//   userId: string;
+//   date: string; // YYYY-MM-DD
+//   githubCommitUrl?: string;
+//   videoUrl?: string;
+//   description: string;
+//   workType: "development" | "design" | "video-editing" | "content" | "other";
+//   hoursWorked: number;
+//   createdAt: string;
+//   adminReviewed: boolean;
+//   adminFeedback?: string;
+// }
+
+// export type Currency = "INR" | "USD";
+
+// /* ============================
+//    PAYMENT
+// ============================ */
+// export interface Payment {
+//   id: string;
+//   userId: string;
+//   amount: number;
+//   type: "task-payment" | "manual" | "bonus" | "withdrawal";
+//   status: "pending" | "completed" | "failed";
+
+//   taskId?: string;
+
+//   createdAt: string;
+//   completedAt?: string;
+
+//   payoutMethod?: "upi" | "bank" | "paypal" | "crypto";
+//   payoutMethodDetails?: string;
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // utils/types.ts
 
 export type AccountStatus = "pending" | "active" | "suspended" | "terminated";
 export type UserRole = "worker" | "admin";
 
+// 🔹 Add this:
+export type Currency = "USD" | "INR";
+
 /* ============================
    PAYOUT ACCOUNT
 ============================ */
 export interface PayoutAccount {
-  accountType: "upi" | "bank";  // restrict values
+  accountType: "upi" | "bank" | "paypal" | "crypto";  // extended types
   verified: boolean;
 
   // UPI
@@ -19,8 +187,15 @@ export interface PayoutAccount {
   bankAccountNumber?: string;
   bankIfsc?: string;
 
+  // PayPal
+  paypalEmail?: string;
+
+  // Crypto
+  cryptoNetwork?: string;
+  cryptoAddress?: string;
+
   // General / common
-  accountNumber: string; // same as UPI or bank account number
+  accountNumber: string; // same as UPI, bank account, paypal email, or crypto address
 }
 
 /* ============================
@@ -39,6 +214,9 @@ export interface User {
 
   preferredWeeklyPayout: number;
 
+  // 🔹 Add this (display currency preference)
+  preferredCurrency?: Currency;
+
   role: UserRole;
   accountStatus: AccountStatus;
 
@@ -46,15 +224,14 @@ export interface User {
   demoTaskCompleted: boolean;
   demoTaskScore?: number;
 
-  payoutAccount?: PayoutAccount;  // <-- use the clean interface
+  payoutAccount?: PayoutAccount;
 
   emailVerified: boolean;
 
   createdAt: string;
   balance: number;
 
-  // must always exist in DB
-  uid?: string;  // Firebase Auth UID
+  uid?: string;
 }
 
 /* ============================
@@ -69,7 +246,7 @@ export interface Task {
 
   skills: string[];
   weeklyPayout: number;
-  deadline: string; // ISO date or '' if not provided
+  deadline: string;
 
   status:
     | "available"
@@ -98,7 +275,7 @@ export interface Task {
 export interface DailySubmission {
   id: string;
   userId: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   githubCommitUrl?: string;
   videoUrl?: string;
   description: string;
@@ -115,7 +292,7 @@ export interface DailySubmission {
 export interface Payment {
   id: string;
   userId: string;
-  amount: number;
+  amount: number; // 🔹 stored in BASE currency (USD)
   type: "task-payment" | "manual" | "bonus" | "withdrawal";
   status: "pending" | "completed" | "failed";
 
@@ -124,6 +301,6 @@ export interface Payment {
   createdAt: string;
   completedAt?: string;
 
-  payoutMethod?: "upi" | "bank";
+  payoutMethod?: "upi" | "bank" | "paypal" | "crypto";
   payoutMethodDetails?: string;
 }

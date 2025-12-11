@@ -1,3 +1,4 @@
+// pages/admin/workers.tsx
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
@@ -7,9 +8,20 @@ import Card from "../../components/Card";
 import Button from "../../components/Button";
 
 import { storage } from "../../utils/storage";
-import type { User, Payment } from "../../utils/types";
+import type { User, Payment, Currency } from "../../utils/types";
 
 import { CheckCircle, X, Ban, DollarSign } from "lucide-react";
+
+/* ===========================
+   Currency helpers
+=========================== */
+const INR_RATE = 89; // same style as worker/admin dashboards
+
+function formatMoney(amountUsd: number, currency: Currency): string {
+  const converted = currency === "INR" ? amountUsd * INR_RATE : amountUsd;
+  const symbol = currency === "INR" ? "₹" : "$";
+  return `${symbol}${converted.toFixed(2)}`;
+}
 
 export default function Workers() {
   const router = useRouter();
@@ -19,6 +31,10 @@ export default function Workers() {
   const [pendingWithdrawals, setPendingWithdrawals] = useState<Payment[]>([]);
   const [filter, setFilter] =
     useState<"all" | "active" | "pending" | "suspended">("all");
+
+  // currency state (per admin)
+  const [currency, setCurrency] = useState<Currency>("USD");
+  const [updatingCurrency, setUpdatingCurrency] = useState(false);
 
   /* -----------------------------------------
    * AUTH + LOAD WORKERS & WITHDRAWALS
@@ -32,9 +48,38 @@ export default function Workers() {
     }
 
     setUser(currentUser);
+    setCurrency(currentUser.preferredCurrency || "USD");
+
     loadWorkers();
     loadWithdrawalRequests();
-  }, []);
+  }, [router]);
+
+  /* -----------------------------------------
+   * CURRENCY PREFERENCE (persist to user)
+   * ----------------------------------------- */
+  const handleCurrencyChange = async (value: Currency) => {
+    if (!user) return;
+    if (value === currency) return;
+
+    setCurrency(value);
+    setUpdatingCurrency(true);
+
+    try {
+      const updatedUser: User = {
+        ...user,
+        preferredCurrency: value,
+      };
+
+      await storage.updateUser(user.id, { preferredCurrency: value });
+      storage.setCurrentUser(updatedUser);
+      setUser(updatedUser);
+    } catch (err) {
+      console.error("Failed to update currency preference:", err);
+      alert("Failed to update currency preference.");
+    } finally {
+      setUpdatingCurrency(false);
+    }
+  };
 
   /* -----------------------------------------
    * LOAD WORKERS
@@ -52,7 +97,6 @@ export default function Workers() {
     const pending = payments.filter(
       (p) => p.type === "withdrawal" && p.status === "pending"
     );
-
     setPendingWithdrawals(pending);
   };
 
@@ -62,16 +106,39 @@ export default function Workers() {
   const approveWithdrawal = async (payment: Payment) => {
     if (!confirm("Approve this withdrawal request?")) return;
 
-    // Mark payment completed
-    await storage.updatePayment(payment.id!, {
-      status: "completed",
-      completedAt: new Date().toISOString(),
-    });
+    try {
+      // 1) Load worker
+      const worker = await storage.getUserById(payment.userId);
+      if (!worker) {
+        alert("Worker not found.");
+        return;
+      }
 
-    // No balance update — already deducted when worker requested
+      if (worker.balance < payment.amount) {
+        alert("Worker balance is lower than withdrawal amount.");
+        return;
+      }
 
-    loadWithdrawalRequests();
-    alert("Withdrawal approved!");
+      const newBalance = worker.balance - payment.amount;
+
+      // 2) Update worker balance
+      await storage.updateUser(worker.id, {
+        balance: newBalance,
+      });
+
+      // 3) Mark payment as completed
+      await storage.updatePayment(payment.id!, {
+        status: "completed",
+        completedAt: new Date().toISOString(),
+      });
+
+      await loadWithdrawalRequests();
+      await loadWorkers(); // keep balances in list in sync
+      alert("Withdrawal approved and balance updated!");
+    } catch (err) {
+      console.error("approveWithdrawal error:", err);
+      alert("Failed to approve withdrawal.");
+    }
   };
 
   /* -----------------------------------------
@@ -80,21 +147,19 @@ export default function Workers() {
   const rejectWithdrawal = async (payment: Payment) => {
     if (!confirm("Reject this withdrawal request?")) return;
 
-    // Mark payment failed
-    await storage.updatePayment(payment.id!, {
-      status: "failed",
-    });
-
-    // Refund worker balance
-    const worker = await storage.getUserById(payment.userId);
-    if (worker) {
-      await storage.updateUser(worker.id, {
-        balance: worker.balance + payment.amount,
+    try {
+      // Just mark payment as failed – no refund,
+      // because balance was NOT deducted yet.
+      await storage.updatePayment(payment.id!, {
+        status: "failed",
       });
-    }
 
-    loadWithdrawalRequests();
-    alert("Withdrawal rejected & refunded!");
+      await loadWithdrawalRequests();
+      alert("Withdrawal rejected.");
+    } catch (err) {
+      console.error("rejectWithdrawal error:", err);
+      alert("Failed to reject withdrawal.");
+    }
   };
 
   /* -----------------------------------------
@@ -149,10 +214,27 @@ export default function Workers() {
             PENDING WITHDRAWAL REQUESTS BLOCK
         ------------------------------------------- */}
         <Card>
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            <DollarSign size={22} className="text-green-600" />
-            Pending Withdrawal Requests
-          </h2>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              Pending Withdrawal Requests
+            </h2>
+
+            {/* Currency selector for this page */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Display currency:</span>
+              <select
+                value={currency}
+                onChange={(e) =>
+                  handleCurrencyChange(e.target.value as Currency)
+                }
+                disabled={updatingCurrency}
+                className="px-3 py-1.5 border rounded-lg text-sm"
+              >
+                <option value="USD">USD ($)</option>
+                <option value="INR">INR (₹)</option>
+              </select>
+            </div>
+          </div>
 
           {pendingWithdrawals.length === 0 ? (
             <p className="text-gray-500 text-center py-4">
@@ -162,21 +244,96 @@ export default function Workers() {
             <div className="space-y-4">
               {pendingWithdrawals.map((p) => {
                 const w = workers.find((u) => u.id === p.userId);
+                const pa = w?.payoutAccount;
+                const availableBalanceNum =
+                  typeof w?.balance === "number" ? w.balance : 0;
+
                 return (
                   <div
                     key={p.id}
-                    className="p-4 border rounded-lg flex justify-between items-center"
+                    className="p-4 border rounded-lg flex justify-between items-center bg-white"
                   >
                     <div>
-                      <p className="font-semibold">{w?.fullName}</p>
+                      <p className="font-semibold">
+                        {w?.fullName ?? "Unknown worker"}
+                      </p>
                       <p className="text-sm text-gray-600">{w?.email}</p>
+
                       <p className="mt-1">
                         <span className="font-semibold text-green-600">
-                          ${p.amount}
+                          {formatMoney(p.amount, currency)}
                         </span>{" "}
                         requested on{" "}
                         {new Date(p.createdAt).toLocaleDateString()}
                       </p>
+
+                      <p className="text-xs text-gray-500 mt-1">
+                        Available Balance:{" "}
+                        {formatMoney(availableBalanceNum, currency)}
+                      </p>
+
+                      {/* Payout details */}
+                      {p.payoutMethod === "upi" && (
+                        <div className="mt-2 text-xs text-gray-500 space-y-0.5">
+                          <p>
+                            <span className="font-semibold">
+                              Payout Method:
+                            </span>{" "}
+                            UPI
+                          </p>
+                          <p>
+                            <span className="font-semibold">UPI ID:</span>{" "}
+                            {pa?.upiId ?? p.payoutMethodDetails ?? "Not set"}
+                          </p>
+                          <p>
+                            <span className="font-semibold">Status:</span>{" "}
+                            {pa?.verified ? "Verified" : "Not Verified"}
+                          </p>
+                        </div>
+                      )}
+
+                      {p.payoutMethod === "bank" && (
+                        <div className="mt-2 text-xs text-gray-500 space-y-0.5">
+                          <p>
+                            <span className="font-semibold">
+                              Payout Method:
+                            </span>{" "}
+                            Bank
+                          </p>
+                          <p>
+                            <span className="font-semibold">
+                              Account Holder:
+                            </span>{" "}
+                            {pa?.accountHolderName ?? "—"}
+                          </p>
+                          <p>
+                            <span className="font-semibold">Bank:</span>{" "}
+                            {pa?.bankName ?? "—"}
+                          </p>
+                          <p>
+                            <span className="font-semibold">
+                              Account Number:
+                            </span>{" "}
+                            {pa?.bankAccountNumber ?? "—"}
+                          </p>
+                          <p>
+                            <span className="font-semibold">IFSC:</span>{" "}
+                            {pa?.bankIfsc ?? "—"}
+                          </p>
+                          <p>
+                            <span className="font-semibold">Status:</span>{" "}
+                            {pa?.verified ? "Verified" : "Not Verified"}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Fallback if method missing */}
+                      {!p.payoutMethod && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          Payout Method:{" "}
+                          {p.payoutMethodDetails ?? "Not specified"}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex gap-2">
@@ -204,15 +361,19 @@ export default function Workers() {
             WORKERS LIST
         ------------------------------------------- */}
         <div className="space-y-6">
-          {/* Filters */}
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">Manage Workers</h1>
+          {/* Filters + heading */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Manage Workers
+            </h1>
 
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               {["all", "active", "pending", "suspended"].map((type) => (
                 <button
                   key={type}
-                  onClick={() => setFilter(type as any)}
+                  onClick={() =>
+                    setFilter(type as "all" | "active" | "pending" | "suspended")
+                  }
                   className={`px-4 py-2 rounded-lg ${
                     filter === type
                       ? "bg-indigo-600 text-white"
@@ -222,7 +383,9 @@ export default function Workers() {
                   {type.charAt(0).toUpperCase() + type.slice(1)} (
                   {type === "all"
                     ? workers.length
-                    : workers.filter((w) => w.accountStatus === type).length}
+                    : workers.filter(
+                        (w) => w.accountStatus === type
+                      ).length}
                   )
                 </button>
               ))}
@@ -284,8 +447,8 @@ export default function Workers() {
                           {worker.knowledgeScore}%
                         </div>
                         <div>
-                          <span className="text-gray-500">Balance:</span> $
-                          {worker.balance.toFixed(2)}
+                          <span className="text-gray-500">Balance:</span>{" "}
+                          {formatMoney(worker.balance, currency)}
                         </div>
                       </div>
 

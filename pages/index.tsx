@@ -1,35 +1,50 @@
-import type { NextPage } from 'next';
-import Head from 'next/head';
-import Link from 'next/link';
-import { ArrowRight, Briefcase, Clock, DollarSign, Globe, Shield, TrendingUp, Users } from 'lucide-react';
+import type { NextPage } from "next";
+import Head from "next/head";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Briefcase,
+  Clock,
+  DollarSign,
+  Globe,
+  Shield,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 
 const Home: NextPage = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Head>
-        <title>Cehpoint - Project-Based Work Platform | Earn Weekly with Flexible Projects</title>
+        <title>
+          Cehpoint - Project-Based Work Platform | Earn Weekly with Flexible
+          Projects
+        </title>
 
-        {/* FIXED — Escaped the apostrophe */}
+        {/* Escaped apostrophe */}
         <meta
           name="description"
-          content="Join Cehpoint&apos;s world-class platform for flexible project-based work. Weekly payouts, global opportunities, and quality projects in software development, video editing, and more."
+          content="Join Cehpoint's world-class platform for flexible project-based work. Weekly payouts, global opportunities, and quality projects in software development, video editing, and more."
         />
       </Head>
 
+      {/* NAVBAR */}
       <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20 items-center">
-            <div className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <div className="flex h-16 sm:h-20 items-center justify-between gap-4">
+            <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
               Cehpoint
             </div>
-            <div className="flex space-x-3">
+
+            {/* Auth buttons – stack on very small screens */}
+            <div className="flex xs:flex-row items-stretch xs:items-center gap-2 xs:gap-3">
               <Link href="/login">
-                <button className="px-6 py-2.5 text-gray-700 hover:text-indigo-600 font-medium transition-all duration-200 hover:bg-gray-50 rounded-lg">
+                <button className="w-full xs:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-gray-700 hover:text-indigo-600 font-medium transition-all duration-200 hover:bg-gray-50 rounded-lg text-sm sm:text-base">
                   Login
                 </button>
               </Link>
               <Link href="/signup">
-                <button className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 shadow-md">
+                <button className="w-full xs:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm sm:text-base shadow-md">
                   Sign Up
                 </button>
               </Link>
@@ -38,40 +53,47 @@ const Home: NextPage = () => {
         </div>
       </nav>
 
-      <section className="gradient-bg text-white py-32 relative overflow-hidden">
+      {/* HERO SECTION */}
+      <section className="gradient-bg text-white py-20 sm:py-24 lg:py-32 relative overflow-hidden flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <div className="animate-fade-in">
-            <div className="inline-block mb-6 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-sm font-medium">
+            <div className="inline-block mb-6 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-xs sm:text-sm font-medium">
               🚀 Join 10,000+ professionals earning on their terms
             </div>
-            <h1 className="text-6xl md:text-7xl font-black mb-6 leading-tight tracking-tight">
-              Work on Your Terms,<br />
+
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 sm:mb-6 leading-tight tracking-tight">
+              Work on Your Terms,
+              <br />
               <span className="bg-gradient-to-r from-white via-purple-100 to-pink-100 bg-clip-text text-transparent">
                 Get Paid Weekly
               </span>
             </h1>
-            <p className="text-xl md:text-2xl mb-10 text-white/90 max-w-3xl mx-auto font-medium leading-relaxed">
-              Join Cehpoint&apos;s project-based work platform. No long-term commitments,
-              flexible schedules, and weekly payouts for quality work.
+
+            <p className="text-base sm:text-lg md:text-2xl mb-8 sm:mb-10 text-white/90 max-w-3xl mx-auto font-medium leading-relaxed">
+              Join Cehpoint&apos;s project-based work platform. No long-term
+              commitments, flexible schedules, and weekly payouts for quality
+              work.
             </p>
+
             <Link href="/signup">
-              <button className="group px-10 py-5 bg-white text-indigo-600 rounded-2xl font-bold text-lg hover:shadow-2xl transition-all duration-300 flex items-center mx-auto space-x-3 hover:scale-105 shadow-xl">
+              <button className="group px-8 sm:px-10 py-4 sm:py-5 bg-white text-indigo-600 rounded-2xl font-bold text-base sm:text-lg hover:shadow-2xl transition-all duration-300 flex items-center justify-center mx-auto space-x-2 sm:space-x-3 hover:scale-105 shadow-xl">
                 <span>Start Your Journey</span>
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
           </div>
 
-          <div className="mt-16 flex justify-center gap-8 text-sm">
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+          {/* Hero stats – wrap nicely on small screens */}
+          <div className="mt-10 sm:mt-16 flex flex-wrap justify-center gap-3 sm:gap-6 text-xs sm:text-sm">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-full">
               <Users size={16} />
               <span>10,000+ Workers</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-full">
               <DollarSign size={16} />
               <span>$2M+ Paid Out</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-full">
               <TrendingUp size={16} />
               <span>98% Satisfaction</span>
             </div>
@@ -79,173 +101,236 @@ const Home: NextPage = () => {
         </div>
       </section>
 
-      <section className="py-24 bg-gradient-to-b from-white to-gray-50">
+      {/* WHY CHOOSE SECTION */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="text-5xl font-black text-gray-900 mb-4">Why Choose Cehpoint?</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <div className="text-center mb-10 sm:mb-16 animate-fade-in">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-3 sm:mb-4">
+              Why Choose Cehpoint?
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
               Everything you need to succeed as a freelance professional
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="group text-center p-8 card-hover bg-white rounded-2xl premium-shadow">
-              <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-shadow animate-float">
-                <Clock className="text-white" size={36} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            <div className="group text-center p-6 sm:p-8 card-hover bg-white rounded-2xl premium-shadow">
+              <div className="w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg group-hover:shadow-xl transition-shadow animate-float">
+                <Clock className="text-white" size={30} />
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">Flexible Schedule</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Work from any timezone, choose your projects, and maintain complete control over your schedule.
+              <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-gray-900">
+                Flexible Schedule
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                Work from any timezone, choose your projects, and maintain
+                complete control over your schedule.
               </p>
             </div>
 
-            <div className="group text-center p-8 card-hover bg-white rounded-2xl premium-shadow">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-shadow">
-                <DollarSign className="text-white" size={36} />
+            <div className="group text-center p-6 sm:p-8 card-hover bg-white rounded-2xl premium-shadow">
+              <div className="w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg group-hover:shadow-xl transition-shadow">
+                <DollarSign className="text-white" size={30} />
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">Weekly Payouts</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Get paid based on completed projects. No waiting for monthly cycles, withdraw anytime.
+              <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-gray-900">
+                Weekly Payouts
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                Get paid based on completed projects. No waiting for monthly
+                cycles, withdraw anytime.
               </p>
             </div>
 
-            <div className="group text-center p-8 card-hover bg-white rounded-2xl premium-shadow">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-shadow">
-                <TrendingUp className="text-white" size={36} />
+            <div className="group text-center p-6 sm:p-8 card-hover bg-white rounded-2xl premium-shadow">
+              <div className="w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg group-hover:shadow-xl transition-shadow">
+                <TrendingUp className="text-white" size={30} />
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">Career Growth</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Top performers get opportunities for full-time positions and higher-paying projects.
+              <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-gray-900">
+                Career Growth
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                Top performers get opportunities for full-time positions and
+                higher-paying projects.
               </p>
             </div>
 
-            <div className="group text-center p-8 card-hover bg-white rounded-2xl premium-shadow">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-shadow">
-                <Briefcase className="text-white" size={36} />
+            <div className="group text-center p-6 sm:p-8 card-hover bg-white rounded-2xl premium-shadow">
+              <div className="w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg group-hover:shadow-xl transition-shadow">
+                <Briefcase className="text-white" size={30} />
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">Diverse Projects</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Software development, video editing, design, and more. Find projects matching your skills.
+              <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-gray-900">
+                Diverse Projects
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                Software development, video editing, design, and more. Find
+                projects matching your skills.
               </p>
             </div>
 
-            <div className="group text-center p-8 card-hover bg-white rounded-2xl premium-shadow">
-              <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-shadow">
-                <Shield className="text-white" size={36} />
+            <div className="group text-center p-6 sm:p-8 card-hover bg-white rounded-2xl premium-shadow">
+              <div className="w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg group-hover:shadow-xl transition-shadow">
+                <Shield className="text-white" size={30} />
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">Secure Platform</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Advanced verification, AI-powered quality checks, and secure payment processing.
+              <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-gray-900">
+                Secure Platform
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                Advanced verification, AI-powered quality checks, and secure
+                payment processing.
               </p>
             </div>
 
-            <div className="group text-center p-8 card-hover bg-white rounded-2xl premium-shadow">
-              <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-shadow">
-                <Globe className="text-white" size={36} />
+            <div className="group text-center p-6 sm:p-8 card-hover bg-white rounded-2xl premium-shadow">
+              <div className="w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg group-hover:shadow-xl transition-shadow">
+                <Globe className="text-white" size={30} />
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">Global Opportunities</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Work with an international IT company from anywhere in the world.
+              <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-gray-900">
+                Global Opportunities
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                Work with an international IT company from anywhere in the
+                world.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-20 bg-gray-50">
+      {/* HOW IT WORKS */}
+      <section className="py-16 sm:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-center mb-12 text-gray-900 animate-fade-in">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8 sm:mb-12 text-gray-900 animate-fade-in">
             How It Works
           </h2>
 
-          <div className="grid md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white p-6 rounded-xl shadow-sm">
-              <div className="text-3xl font-bold text-indigo-600 mb-4">1</div>
+              <div className="text-2xl sm:text-3xl font-bold text-indigo-600 mb-3 sm:mb-4">
+                1
+              </div>
               <h3 className="text-lg font-semibold mb-2">Sign Up</h3>
-              <p className="text-gray-600">
-                Complete our knowledge check to verify your skills and prevent fake registrations.
+              <p className="text-sm sm:text-base text-gray-600">
+                Complete our knowledge check to verify your skills and prevent
+                fake registrations.
               </p>
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-sm">
-              <div className="text-3xl font-bold text-indigo-600 mb-4">2</div>
+              <div className="text-2xl sm:text-3xl font-bold text-indigo-600 mb-3 sm:mb-4">
+                2
+              </div>
               <h3 className="text-lg font-semibold mb-2">Demo Task</h3>
-              <p className="text-gray-600">
-                Complete a demo task to showcase your abilities and qualify for projects.
+              <p className="text-sm sm:text-base text-gray-600">
+                Complete a demo task to showcase your abilities and qualify for
+                projects.
               </p>
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-sm">
-              <div className="text-3xl font-bold text-indigo-600 mb-4">3</div>
+              <div className="text-2xl sm:text-3xl font-bold text-indigo-600 mb-3 sm:mb-4">
+                3
+              </div>
               <h3 className="text-lg font-semibold mb-2">Accept Projects</h3>
-              <p className="text-gray-600">
-                Browse and accept weekly projects that match your skills and schedule.
+              <p className="text-sm sm:text-base text-gray-600">
+                Browse and accept weekly projects that match your skills and
+                schedule.
               </p>
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-sm">
-              <div className="text-3xl font-bold text-indigo-600 mb-4">4</div>
+              <div className="text-2xl sm:text-3xl font-bold text-indigo-600 mb-3 sm:mb-4">
+                4
+              </div>
               <h3 className="text-lg font-semibold mb-2">Get Paid</h3>
-              <p className="text-gray-600">
-                Complete tasks, earn money, and withdraw anytime to your verified account.
+              <p className="text-sm sm:text-base text-gray-600">
+                Complete tasks, earn money, and withdraw anytime to your
+                verified account.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-20 bg-indigo-600 text-white">
+      {/* CTA SECTION */}
+      <section className="py-16 sm:py-20 bg-indigo-600 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold mb-6">Ready to Start Earning?</h2>
-          <p className="text-xl mb-8 text-indigo-100">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">
+            Ready to Start Earning?
+          </h2>
+          <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 text-indigo-100">
             Join thousands of professionals working flexibly on Cehpoint
           </p>
           <Link href="/signup">
-            <button className="px-8 py-4 bg-white text-indigo-600 rounded-lg font-semibold text-lg hover:bg-gray-100 transition">
+            <button className="px-6 sm:px-8 py-3 sm:py-4 bg-white text-indigo-600 rounded-lg font-semibold text-base sm:text-lg hover:bg-gray-100 transition">
               Create Your Account
             </button>
           </Link>
         </div>
       </section>
 
-      <footer className="bg-gray-900 text-gray-300 py-12">
+      {/* FOOTER */}
+      <footer className="bg-gray-900 text-gray-300 py-10 sm:py-12 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-white text-lg font-semibold mb-4">Cehpoint</h3>
-              <p className="text-sm">
-                Connecting skilled professionals with project-based work opportunities worldwide.
+              <h3 className="text-white text-lg font-semibold mb-3 sm:mb-4">
+                Cehpoint
+              </h3>
+              <p className="text-xs sm:text-sm">
+                Connecting skilled professionals with project-based work
+                opportunities worldwide.
               </p>
             </div>
 
             <div>
-              <h4 className="text-white font-semibold mb-4">Platform</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/signup">Sign Up</Link></li>
-                <li><Link href="/login">Login</Link></li>
-                <li><Link href="/policies/terms">Terms of Service</Link></li>
+              <h4 className="text-white font-semibold mb-3 sm:mb-4">
+                Platform
+              </h4>
+              <ul className="space-y-2 text-xs sm:text-sm">
+                <li>
+                  <Link href="/signup">Sign Up</Link>
+                </li>
+                <li>
+                  <Link href="/login">Login</Link>
+                </li>
+                <li>
+                  <Link href="/policies/terms">Terms of Service</Link>
+                </li>
               </ul>
             </div>
 
             <div>
-              <h4 className="text-white font-semibold mb-4">Policies</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/policies/privacy">Privacy Policy</Link></li>
-                <li><Link href="/policies/payment">Payment Policy</Link></li>
-                <li><Link href="/policies/termination">Termination Policy</Link></li>
+              <h4 className="text-white font-semibold mb-3 sm:mb-4">
+                Policies
+              </h4>
+              <ul className="space-y-2 text-xs sm:text-sm">
+                <li>
+                  <Link href="/policies/privacy">Privacy Policy</Link>
+                </li>
+                <li>
+                  <Link href="/policies/payment">Payment Policy</Link>
+                </li>
+                <li>
+                  <Link href="/policies/termination">Termination Policy</Link>
+                </li>
               </ul>
             </div>
 
             <div>
-              <h4 className="text-white font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="mailto:support@cehpoint.com">Contact Us</a></li>
-                <li><Link href="/faq">FAQ</Link></li>
+              <h4 className="text-white font-semibold mb-3 sm:mb-4">
+                Support
+              </h4>
+              <ul className="space-y-2 text-xs sm:text-sm">
+                <li>
+                  <a href="mailto:support@cehpoint.com">Contact Us</a>
+                </li>
+                <li>
+                  <Link href="/faq">FAQ</Link>
+                </li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
+          <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-xs sm:text-sm">
             <p>&copy; 2024 Cehpoint. All rights reserved.</p>
           </div>
         </div>

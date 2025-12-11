@@ -1,3 +1,4 @@
+// pages/admin/index.tsx
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
@@ -8,17 +9,31 @@ import Card from "../../components/Card";
 import { Users, Briefcase, Calendar, Clock } from "lucide-react";
 
 import { storage } from "../../utils/storage";
-import type { User, Task } from "../../utils/types";
+import type { User, Task, Currency } from "../../utils/types";
 
 import { db } from "../../utils/firebase";
 import { collection, getDocs } from "firebase/firestore";
 
+/* ===========================
+   Currency helpers
+=========================== */
+const INR_RATE = 89; // same style as worker dashboard
+
+function formatMoney(amountUsd: number, currency: Currency): string {
+  const converted = currency === "INR" ? amountUsd * INR_RATE : amountUsd;
+  const symbol = currency === "INR" ? "₹" : "$";
+  return `${symbol}${converted.toFixed(2)}`;
+}
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [workers, setWorkers] = useState<User[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+
+  // currency state (same idea as worker dashboard)
+  const [currency, setCurrency] = useState<Currency>("USD");
+  const [updatingCurrency, setUpdatingCurrency] = useState(false);
 
   useEffect(() => {
     const currentUser = storage.getCurrentUser();
@@ -29,6 +44,7 @@ export default function AdminDashboard() {
     }
 
     setUser(currentUser);
+    setCurrency(currentUser.preferredCurrency || "USD");
 
     const loadFirestoreData = async () => {
       // Fetch Workers
@@ -51,9 +67,44 @@ export default function AdminDashboard() {
 
   if (!user) return null;
 
-  const activeWorkers = workers.filter((w) => w.accountStatus === "active").length;
-  const pendingWorkers = workers.filter((w) => w.accountStatus === "pending").length;
+  // currency preference handler (persist to Firestore + local storage)
+  const handleCurrencyChange = async (value: Currency) => {
+    if (!user) return;
+    if (value === currency) return;
+
+    setCurrency(value);
+    setUpdatingCurrency(true);
+
+    try {
+      const updatedUser: User = {
+        ...user,
+        preferredCurrency: value,
+      };
+
+      await storage.updateUser(user.id, { preferredCurrency: value });
+      storage.setCurrentUser(updatedUser);
+      setUser(updatedUser);
+    } catch (err) {
+      console.error("Currency update failed:", err);
+      alert("Failed to update currency.");
+    } finally {
+      setUpdatingCurrency(false);
+    }
+  };
+
+  const activeWorkers = workers.filter(
+    (w) => w.accountStatus === "active"
+  ).length;
+  const pendingWorkers = workers.filter(
+    (w) => w.accountStatus === "pending"
+  ).length;
   const activeTasks = tasks.filter((t) => t.status === "in-progress").length;
+
+  // simple example “total weekly payouts” metric, shown in chosen currency
+  const totalWeeklyPayoutUsd = tasks.reduce(
+    (sum, t) => sum + (t.weeklyPayout || 0),
+    0
+  );
 
   const stats = [
     {
@@ -77,6 +128,13 @@ export default function AdminDashboard() {
       icon: Briefcase,
       color: "from-green-500 to-emerald-600",
     },
+    {
+      label: "Total Weekly Payouts",
+      value: formatMoney(totalWeeklyPayoutUsd, currency),
+      subValue: "Sum of task weekly payouts",
+      icon: Calendar,
+      color: "from-purple-500 to-pink-600",
+    },
   ];
 
   return (
@@ -86,9 +144,31 @@ export default function AdminDashboard() {
       </Head>
 
       <div className="space-y-8">
-        <div>
-          <h1 className="text-4xl font-black text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600 text-lg">Manage workers, tasks, and platform operations</p>
+        {/* Header + currency selector */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h1 className="text-4xl font-black text-gray-900 mb-2">
+              Admin Dashboard
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Manage workers, tasks, and platform operations
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Display currency:</span>
+            <select
+              value={currency}
+              onChange={(e) =>
+                handleCurrencyChange(e.target.value as Currency)
+              }
+              disabled={updatingCurrency}
+              className="px-3 py-1.5 border rounded-lg text-sm"
+            >
+              <option value="USD">USD ($)</option>
+              <option value="INR">INR (₹)</option>
+            </select>
+          </div>
         </div>
 
         {/* Stats Section */}
@@ -104,8 +184,12 @@ export default function AdminDashboard() {
                 <stat.icon className="text-white" size={28} />
               </div>
               <p className="text-3xl font-black text-gray-900">{stat.value}</p>
-              <p className="text-sm text-gray-900 mt-2 font-bold">{stat.label}</p>
-              <p className="text-xs text-gray-500 mt-1 font-semibold">{stat.subValue}</p>
+              <p className="text-sm text-gray-900 mt-2 font-bold">
+                {stat.label}
+              </p>
+              <p className="text-xs text-gray-500 mt-1 font-semibold">
+                {stat.subValue}
+              </p>
             </div>
           ))}
         </div>
@@ -113,7 +197,9 @@ export default function AdminDashboard() {
         {/* Workers List */}
         <div className="grid md:grid-cols-2 gap-6">
           <div className="glass-card rounded-2xl premium-shadow p-8">
-            <h2 className="text-2xl font-black mb-6 text-gray-900">Recent Workers</h2>
+            <h2 className="text-2xl font-black mb-6 text-gray-900">
+              Recent Workers
+            </h2>
 
             {workers.length === 0 ? (
               <div className="text-center py-12">
@@ -128,7 +214,9 @@ export default function AdminDashboard() {
                     className="flex justify-between items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
                   >
                     <div>
-                      <p className="font-bold text-gray-900">{worker.fullName}</p>
+                      <p className="font-bold text-gray-900">
+                        {worker.fullName}
+                      </p>
                       <p className="text-sm text-gray-600">{worker.email}</p>
                     </div>
                     <span
@@ -150,7 +238,9 @@ export default function AdminDashboard() {
 
           {/* Task List */}
           <div className="glass-card rounded-2xl premium-shadow p-8">
-            <h2 className="text-2xl font-black mb-6 text-gray-900">Recent Tasks</h2>
+            <h2 className="text-2xl font-black mb-6 text-gray-900">
+              Recent Tasks
+            </h2>
 
             {tasks.length === 0 ? (
               <div className="text-center py-12">
